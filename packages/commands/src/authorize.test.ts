@@ -31,21 +31,15 @@ describe('authorizePlan — the single choke point', () => {
 
   it('gives the same error for a non-existent plan as for one you cannot see', () => {
     // Distinguishing them would let anyone enumerate plan ids.
-    const a = (() => {
+    const messageFor = (id: string): string => {
       try {
-        authorizePlan(h.db, planId, 'nobody')
+        authorizePlan(h.db, id, 'nobody')
+        throw new Error('expected authorizePlan to reject')
       } catch (e) {
         return (e as Error).message
       }
-    })()
-    const b = (() => {
-      try {
-        authorizePlan(h.db, 'does-not-exist', 'nobody')
-      } catch (e) {
-        return (e as Error).message
-      }
-    })()
-    expect(a).toBe(b)
+    }
+    expect(messageFor(planId)).toBe(messageFor('does-not-exist'))
   })
 
   it('enforces the role ranking', () => {
