@@ -95,9 +95,16 @@ unfunded — which is the substance of the "yearly by date recalculation" questi
 
 ## Open
 
-- **MF was never produced.** No path in the current editor yielded `goal_type: 'MF'`. It may be
-  a legacy encoding that only exists on older plans. Our compat API should still accept and
-  emit it; whether we can *create* one is a separate question. **Follow-up P2-06b.**
+- **MF is not creatable — resolved by exhaustion (P2-06b).** The editor's full matrix has now
+  been exercised: four cadences (Weekly, Monthly, Yearly, Custom) × three behaviours (Set
+  aside, Fill up to, Have a balance of) × dated and undated. Every combination yields `NEED`,
+  `TB` or `TBD`. `MF` — "monthly funding", the older encoding for *set aside £X every month* —
+  is now expressed as `NEED` with `goal_cadence: 1` and `goal_needs_whole_amount: true`.
+  **Conclusion:** `MF` is legacy, present on older plans only. Our compat API must accept and
+  emit it, and the engine must compute it (treating it as monthly set-aside), but nothing in
+  our UI creates one. Same treatment for `DEBT`, which is likewise unproduced — see
+  [P2-07](P2-07-debt-targets-and-opening-debt.md) R40, where a debt payoff target is stored as
+  `TBD`.
 - ~~Rounding when the division is inexact.~~ **Resolved in [P2-03](P2-03-target-recalculation-and-rounding.md) (R28):**
   rounded **up to the nearest cent**.
 - The due-date picker offers **month and year only**, no day. But `goal_day` exists in the API
