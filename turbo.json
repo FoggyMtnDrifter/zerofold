@@ -1,7 +1,21 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "PORT",
+    "HOSTNAME",
+    "ZEROFOLD_DATA_DIR",
+    "ZEROFOLD_BASE_URL",
+    "ZEROFOLD_LOG_LEVEL",
+    "ZEROFOLD_ALLOW_OPEN_REGISTRATION",
+    "ZEROFOLD_SECRET",
+    "ZEROFOLD_MIGRATIONS_DIR"
+  ],
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
     "typecheck": { "dependsOn": ["^build"] },
     "test": { "dependsOn": ["^build"] }
   }
