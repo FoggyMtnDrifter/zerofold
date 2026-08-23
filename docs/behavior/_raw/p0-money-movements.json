@@ -1,0 +1,146 @@
+{
+ "mm": [
+  {
+   "id": "08f72490-1212-48ff-a64a-1b871e366076",
+   "month": "2026-09-01",
+   "moved_at": "2026-08-23T02:50:35Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": null,
+   "to_category_id": "8df3fad1-d8f3-4fd7-876c-e2fdcaa2c77d",
+   "amount": 300000,
+   "amount_formatted": "$300.00",
+   "amount_currency": 300,
+   "deleted": false
+  },
+  {
+   "id": "ca5c2763-2b61-43b5-90bb-73ac18a19bd7",
+   "month": "2026-09-01",
+   "moved_at": "2026-08-23T02:50:36Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": "8df3fad1-d8f3-4fd7-876c-e2fdcaa2c77d",
+   "to_category_id": null,
+   "amount": 300000,
+   "amount_formatted": "$300.00",
+   "amount_currency": 300,
+   "deleted": false
+  },
+  {
+   "id": "aed2eef3-9d91-425e-938a-2d411d46089d",
+   "month": "2026-08-01",
+   "moved_at": "2026-08-23T02:51:10Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": null,
+   "to_category_id": "1b307646-4ac1-4232-b44a-986029e6553b",
+   "amount": 100000,
+   "amount_formatted": "$100.00",
+   "amount_currency": 100,
+   "deleted": false
+  },
+  {
+   "id": "bf13ab75-466b-4620-8bf4-76619697b0c1",
+   "month": "2026-08-01",
+   "moved_at": "2026-08-23T02:51:11Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": null,
+   "to_category_id": "e5062dfb-6d21-486b-95f5-fe3b63de2d90",
+   "amount": 5000000,
+   "amount_formatted": "$5000.00",
+   "amount_currency": 5000,
+   "deleted": false
+  },
+  {
+   "id": "98f4f9c1-068b-4bea-8fde-414c5b4756af",
+   "month": "2026-08-01",
+   "moved_at": "2026-08-23T02:51:12Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": "e5062dfb-6d21-486b-95f5-fe3b63de2d90",
+   "to_category_id": null,
+   "amount": 5000000,
+   "amount_formatted": "$5000.00",
+   "amount_currency": 5000,
+   "deleted": false
+  },
+  {
+   "id": "767863c7-e1fd-4d50-b15e-43b3719a6679",
+   "month": "2026-09-01",
+   "moved_at": "2026-08-23T02:52:50Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": null,
+   "to_category_id": "8df3fad1-d8f3-4fd7-876c-e2fdcaa2c77d",
+   "amount": 250000,
+   "amount_formatted": "$250.00",
+   "amount_currency": 250,
+   "deleted": false
+  },
+  {
+   "id": "afa84ba6-879a-43cc-aaef-e95cb2f8ae7f",
+   "month": "2026-09-01",
+   "moved_at": "2026-08-23T02:52:50Z",
+   "note": null,
+   "money_movement_group_id": null,
+   "performed_by_user_id": "c626e623-64cd-4188-9ee0-fa7710b2635a",
+   "from_category_id": "8df3fad1-d8f3-4fd7-876c-e2fdcaa2c77d",
+   "to_category_id": null,
+   "amount": 250000,
+   "amount_formatted": "$250.00",
+   "amount_currency": 250,
+   "deleted": false
+  }
+ ],
+ "rows": [
+  {
+   "month": "2026-08-01",
+   "category": "C3",
+   "sum_movements": 0,
+   "budgeted": 0,
+   "match": "✓"
+  },
+  {
+   "month": "2026-08-01",
+   "category": "C2",
+   "sum_movements": 0,
+   "budgeted": 0,
+   "match": "✓"
+  },
+  {
+   "month": "2026-08-01",
+   "category": "C1",
+   "sum_movements": 100000,
+   "budgeted": 100000,
+   "match": "✓"
+  },
+  {
+   "month": "2026-09-01",
+   "category": "C3",
+   "sum_movements": 0,
+   "budgeted": 0,
+   "match": "✓"
+  },
+  {
+   "month": "2026-09-01",
+   "category": "C1",
+   "sum_movements": 0,
+   "budgeted": 0,
+   "match": "✓"
+  },
+  {
+   "month": "2026-09-01",
+   "category": "C2",
+   "sum_movements": 0,
+   "budgeted": 0,
+   "match": "✓"
+  }
+ ]
+}

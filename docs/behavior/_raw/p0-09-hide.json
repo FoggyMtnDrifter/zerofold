@@ -1,0 +1,29 @@
+{
+ "c2": {
+  "id": "8df3fad1-d8f3-4fd7-876c-e2fdcaa2c77d",
+  "category_group_id": "98ae11bd-dd38-4a1c-95f2-6aa39f24e614",
+  "name": "C2",
+  "hidden": true,
+  "internal": false,
+  "original_category_group_id": null,
+  "note": null,
+  "budgeted": 200000,
+  "activity": 0,
+  "balance": 200000,
+  "goal_type": null,
+  "goal_needs_whole_amount": null,
+  "goal_day": null,
+  "goal_cadence": null,
+  "goal_cadence_frequency": null,
+  "goal_creation_month": null,
+  "goal_target": 0,
+  "goal_target_month": null,
+  "goal_percentage_complete": null,
+  "goal_months_to_budget": null,
+  "goal_under_funded": null,
+  "goal_overall_funded": null,
+  "goal_overall_left": null,
+  "goal_snoozed_at": null,
+  "deleted": false
+ }
+}
