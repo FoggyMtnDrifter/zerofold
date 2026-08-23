@@ -11,17 +11,23 @@ export interface TransactionRef {
   readonly transactionId: string
 }
 
+/**
+ * Optional fields are declared `| undefined` rather than bare `?`, because
+ * `exactOptionalPropertyTypes` distinguishes "absent" from "present and undefined" — and
+ * validated input from Zod is always the latter. Writing `?: boolean` here would compile
+ * everywhere except at the one call site that matters.
+ */
 export interface UpdateTransactionInput extends TransactionRef {
-  readonly date?: CalendarDate
-  readonly amount?: Milliunits
-  readonly payeeId?: string | null
-  readonly categoryId?: string | null
-  readonly memo?: string | null
-  readonly cleared?: schema.ClearedStatus
-  readonly approved?: boolean
-  readonly flagColor?: schema.FlagColor | null
+  readonly date?: CalendarDate | undefined
+  readonly amount?: Milliunits | undefined
+  readonly payeeId?: string | null | undefined
+  readonly categoryId?: string | null | undefined
+  readonly memo?: string | null | undefined
+  readonly cleared?: schema.ClearedStatus | undefined
+  readonly approved?: boolean | undefined
+  readonly flagColor?: schema.FlagColor | null | undefined
   /** Editing a reconciled row requires saying so explicitly. See R71. */
-  readonly force?: boolean
+  readonly force?: boolean | undefined
 }
 
 function load(ctx: CommandContext, ref: TransactionRef): Txn {
@@ -167,7 +173,7 @@ export function updateTransaction(ctx: CommandContext, input: UpdateTransactionI
 }
 
 export interface DeleteTransactionInput extends TransactionRef {
-  readonly force?: boolean
+  readonly force?: boolean | undefined
 }
 
 /**

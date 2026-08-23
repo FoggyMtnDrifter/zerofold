@@ -27,6 +27,12 @@ export type {
 } from './transaction/create-transaction.ts'
 export { createTransaction } from './transaction/create-transaction.ts'
 export type {
+  ListTransactionsInput,
+  ListTransactionsResult,
+  RegisterRow,
+} from './transaction/list.ts'
+export { accountTotals, listTransactions } from './transaction/list.ts'
+export type {
   DeleteTransactionInput,
   TransactionRef,
   UpdateTransactionInput,

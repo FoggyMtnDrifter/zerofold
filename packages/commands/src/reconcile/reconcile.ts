@@ -9,7 +9,7 @@ export interface ReconcileInput {
   readonly accountId: string
   /** The balance the institution says the account holds. */
   readonly statementBalance: Milliunits
-  readonly statementDate?: CalendarDate
+  readonly statementDate?: CalendarDate | undefined
 }
 
 export interface ReconcileResult {

@@ -1,5 +1,6 @@
 import type { Db } from '@zerofold/db'
-import type { CalendarDate } from '@zerofold/shared/date'
+import { type CalendarDate, calendarDate } from '@zerofold/shared/date'
+import { type Milliunits, milli } from '@zerofold/shared/money'
 import { z } from 'zod'
 import { createAccount } from './account/create-account.ts'
 import {
@@ -11,10 +12,36 @@ import {
 import { authorizePlan, type Role } from './authorize.ts'
 import { makeContext } from './context.ts'
 import { createPlan } from './plan/create-plan.ts'
+import { reconcile } from './reconcile/reconcile.ts'
+import { createTransaction } from './transaction/create-transaction.ts'
+import { listTransactions } from './transaction/list.ts'
+import { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
 
-const milliunits = z
+/**
+ * Milliunits arrive as a string so JSON never carries a lossy number, and the brand is
+ * **earned by validation** rather than asserted afterwards. A cast would let an unvalidated
+ * value wear the type; a transform means the only way to hold a `Milliunits` is to have parsed
+ * one.
+ */
+const milliunits: z.ZodType<Milliunits, unknown> = z
   .union([z.string(), z.number(), z.bigint()])
-  .transform((v) => BigInt(v) as unknown as bigint)
+  .transform((v) => milli(BigInt(v)))
+
+/**
+ * A calendar date. The regex gates the shape; `calendarDate` rejects dates that do not exist,
+ * so 2026-02-30 fails here rather than silently rolling into March somewhere downstream.
+ */
+const calendarDateSchema: z.ZodType<CalendarDate, unknown> = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD')
+  .transform((v, ctx) => {
+    try {
+      return calendarDate(v)
+    } catch {
+      ctx.addIssue({ code: 'custom', message: `${v} is not a real date` })
+      return z.NEVER
+    }
+  })
 
 const planScoped = z.object({ planId: z.string().min(1) })
 
@@ -76,7 +103,7 @@ export const procedures = {
         planId: input.planId,
         name: input.name,
         type: input.type,
-        balance: input.balance as never,
+        balance: input.balance,
         ...(input.note === undefined ? {} : { note: input.note }),
       }),
   }),
@@ -117,6 +144,90 @@ export const procedures = {
       deleteAccount(makeContext(db, userId, today), input)
       return { ok: true as const }
     },
+  }),
+
+  // ── register ──────────────────────────────────────────────────────────────────────
+
+  'transaction.list': define({
+    input: planScoped.extend({
+      accountId: z.string().optional(),
+      limit: z.number().int().min(1).max(500).optional(),
+      cursor: z.string().optional(),
+      unapprovedOnly: z.boolean().optional(),
+      uncategorizedOnly: z.boolean().optional(),
+    }),
+    plan: 'viewer',
+    handler: ({ db, input }) => listTransactions(db, input),
+  }),
+
+  'transaction.create': define({
+    input: planScoped.extend({
+      accountId: z.string().min(1),
+      date: calendarDateSchema,
+      amount: milliunits,
+      payeeId: z.string().nullish(),
+      categoryId: z.string().nullish(),
+      memo: z.string().max(500).nullish(),
+      cleared: z.enum(['uncleared', 'cleared', 'reconciled']).optional(),
+      approved: z.boolean().optional(),
+      flagColor: z.enum(['red', 'orange', 'yellow', 'green', 'blue', 'purple']).nullish(),
+      importId: z.string().nullish(),
+      subtransactions: z
+        .array(
+          z.object({
+            amount: milliunits,
+            categoryId: z.string().nullish(),
+            payeeId: z.string().nullish(),
+            memo: z.string().max(500).nullish(),
+          }),
+        )
+        .optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) =>
+      createTransaction(makeContext(db, userId, today), input),
+  }),
+
+  'transaction.update': define({
+    input: planScoped.extend({
+      transactionId: z.string().min(1),
+      date: calendarDateSchema.optional(),
+      amount: milliunits.optional(),
+      payeeId: z.string().nullish(),
+      categoryId: z.string().nullish(),
+      memo: z.string().max(500).nullish(),
+      cleared: z.enum(['uncleared', 'cleared', 'reconciled']).optional(),
+      approved: z.boolean().optional(),
+      flagColor: z.enum(['red', 'orange', 'yellow', 'green', 'blue', 'purple']).nullish(),
+      force: z.boolean().optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      updateTransaction(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'transaction.delete': define({
+    input: planScoped.extend({
+      transactionId: z.string().min(1),
+      force: z.boolean().optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      deleteTransaction(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'account.reconcile': define({
+    input: planScoped.extend({
+      accountId: z.string().min(1),
+      statementBalance: milliunits,
+      statementDate: calendarDateSchema.optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => reconcile(makeContext(db, userId, today), input),
   }),
 } as const
 

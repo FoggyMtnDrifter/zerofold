@@ -6,10 +6,10 @@ import { type CommandContext, CommandError, type PlanWrite, withPlanWrite } from
 
 export interface SubtransactionInput {
   readonly amount: Milliunits
-  readonly categoryId?: string | null
-  readonly payeeId?: string | null
-  readonly memo?: string | null
-  readonly transferAccountId?: string | null
+  readonly categoryId?: string | null | undefined
+  readonly payeeId?: string | null | undefined
+  readonly memo?: string | null | undefined
+  readonly transferAccountId?: string | null | undefined
 }
 
 export interface CreateTransactionInput {
@@ -17,14 +17,14 @@ export interface CreateTransactionInput {
   readonly accountId: string
   readonly date: CalendarDate
   readonly amount: Milliunits
-  readonly payeeId?: string | null
-  readonly categoryId?: string | null
-  readonly memo?: string | null
-  readonly cleared?: schema.ClearedStatus
-  readonly approved?: boolean
-  readonly flagColor?: schema.FlagColor | null
-  readonly importId?: string | null
-  readonly subtransactions?: readonly SubtransactionInput[]
+  readonly payeeId?: string | null | undefined
+  readonly categoryId?: string | null | undefined
+  readonly memo?: string | null | undefined
+  readonly cleared?: schema.ClearedStatus | undefined
+  readonly approved?: boolean | undefined
+  readonly flagColor?: schema.FlagColor | null | undefined
+  readonly importId?: string | null | undefined
+  readonly subtransactions?: readonly SubtransactionInput[] | undefined
 }
 
 export interface CreateTransactionResult {
