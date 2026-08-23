@@ -1,0 +1,38 @@
+{
+ "made": {
+  "R-100k-over-3": "abaeb42c-bc79-4b78-97c9-8a46050ebd0c",
+  "R-100k-over-6": "7b6b4732-0be3-42a4-9ac3-8959bb72bbcf",
+  "R-10-over-3": "b3671b68-8fb5-4f76-a977-4b0616845d13",
+  "R-1-over-3": "360734fd-0c9e-472a-b64c-9c2b2c92a665"
+ },
+ "rows": {
+  "R-100k-over-3": {
+   "target": 100000,
+   "months": 3,
+   "exact": "33333.3333",
+   "under_funded": 33340,
+   "matches": "?"
+  },
+  "R-100k-over-6": {
+   "target": 100000,
+   "months": 6,
+   "exact": "16666.6667",
+   "under_funded": 16670,
+   "matches": "?"
+  },
+  "R-10-over-3": {
+   "target": 10,
+   "months": 3,
+   "exact": "3.3333",
+   "under_funded": 10,
+   "matches": "?"
+  },
+  "R-1-over-3": {
+   "target": 1,
+   "months": 3,
+   "exact": "0.3333",
+   "under_funded": 10,
+   "matches": "?"
+  }
+ }
+}

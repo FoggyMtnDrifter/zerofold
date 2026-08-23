@@ -1,0 +1,50 @@
+{
+ "s1": {
+  "AUG": {
+   "budgeted": 200000,
+   "balance": 200000,
+   "target": 600000,
+   "target_month": "2026-09-01",
+   "under_funded": 100000,
+   "percentage_complete": 33,
+   "months_to_budget": 2,
+   "overall_funded": 200000,
+   "overall_left": 400000
+  },
+  "SEP": {
+   "budgeted": 0,
+   "balance": 200000,
+   "target": 600000,
+   "target_month": "2026-09-01",
+   "under_funded": 400000,
+   "percentage_complete": 33,
+   "months_to_budget": 1,
+   "overall_funded": 200000,
+   "overall_left": 400000
+  }
+ },
+ "s2": {
+  "AUG": {
+   "budgeted": 450000,
+   "balance": 450000,
+   "target": 600000,
+   "target_month": "2026-09-01",
+   "under_funded": 0,
+   "percentage_complete": 75,
+   "months_to_budget": 2,
+   "overall_funded": 450000,
+   "overall_left": 150000
+  },
+  "SEP": {
+   "budgeted": 0,
+   "balance": 450000,
+   "target": 600000,
+   "target_month": "2026-09-01",
+   "under_funded": 150000,
+   "percentage_complete": 75,
+   "months_to_budget": 1,
+   "overall_funded": 450000,
+   "overall_left": 150000
+  }
+ }
+}

@@ -73,8 +73,14 @@ Target 600000, due 2026-09-01, created in August, nothing assigned:
 
 ### R27 — TBD spreads the remaining amount evenly over the remaining months
 
+> ⚠ **The formula below is SUPERSEDED.** It was derived from unfunded observations only, where
+> several candidate formulas coincide, and it is wrong for any month other than the last.
+> See **[P2-03](P2-03-target-recalculation-and-rounding.md)** for the corrected R27 and for the
+> ceiling-to-cent rounding rule (R28). The `months_to_budget` and escalation findings below
+> stand; only the arithmetic was wrong.
+
     months_to_budget(M) = inclusive month count from M through goal_target_month
-    goal_under_funded(M) = (goal_target − goal_overall_funded) / months_to_budget(M)
+    goal_under_funded(M) = (goal_target − goal_overall_funded) / months_to_budget(M)   ← WRONG
 
 - AUG: 600000 ÷ 2 = **300000** ✓
 - SEP: 600000 ÷ 1 = **600000** ✓
@@ -92,9 +98,8 @@ unfunded — which is the substance of the "yearly by date recalculation" questi
 - **MF was never produced.** No path in the current editor yielded `goal_type: 'MF'`. It may be
   a legacy encoding that only exists on older plans. Our compat API should still accept and
   emit it; whether we can *create* one is a separate question. **Follow-up P2-06b.**
-- **Rounding when the division is inexact** is untested — both cases here divided evenly.
-  Whether YNAB floors, rounds, or puts the remainder in the final month matters at milliunit
-  precision. Folded into **P2-03**.
+- ~~Rounding when the division is inexact.~~ **Resolved in [P2-03](P2-03-target-recalculation-and-rounding.md) (R28):**
+  rounded **up to the nearest cent**.
 - The due-date picker offers **month and year only**, no day. But `goal_day` exists in the API
   and the Monthly tab has a "By" selector defaulting to "Last Day of Month". `goal_day` is
   presumably driven by that, not by the Custom due date. **Folded into P2-02.**
