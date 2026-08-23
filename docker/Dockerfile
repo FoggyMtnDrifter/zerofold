@@ -19,12 +19,16 @@ ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
 RUN corepack enable
 WORKDIR /app
 
+# Every workspace manifest, so pnpm can link the graph before any source arrives. A package
+# missing here installs no dependencies and resolves nothing at build time — the failure appears
+# as "Can't resolve '@zerofold/db'" from a file that plainly imports it.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/web/package.json           apps/web/
-COPY packages/shared/package.json    packages/shared/
-COPY packages/db/package.json        packages/db/
+COPY apps/web/package.json               apps/web/
+COPY packages/shared/package.json        packages/shared/
+COPY packages/db/package.json            packages/db/
+COPY packages/commands/package.json      packages/commands/
 COPY packages/budget-engine/package.json packages/budget-engine/
-COPY packages/importers/package.json packages/importers/
+COPY packages/importers/package.json     packages/importers/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 

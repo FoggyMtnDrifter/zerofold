@@ -6,9 +6,12 @@ Zerofold implements the zero-based budgeting method — every unit of currency y
 assigned a job before you spend it — with the depth that method actually requires:
 credit-card payment categories, reconciliation, targets, scheduled transactions, and reports.
 
-> **Status: pre-alpha.** The container builds and runs, but there is no budgeting in it yet —
-> no auth, no accounts, no register. The behavioural specification is complete enough to build
-> against; see [docs/behavior](docs/behavior/).
+> **Status: pre-alpha.** Sign-in, plans, accounts and a working transaction register — entry,
+> editing, reconciliation, undo — all run today. The budget itself does not: no categories to
+> assign to, no targets, no reports. In other words, the ledger half works and the budgeting
+> half does not, so this is not yet usable for budgeting. See
+> [docs/milestones.md](docs/milestones.md) for where that stands, and
+> [docs/behavior](docs/behavior/) for the specification it is being built against.
 
 ## Quickstart
 
@@ -26,6 +29,10 @@ running.
 **Do not put the data directory on an NFS or SMB share.** SQLite's locking is unreliable over
 network filesystems and the database can be corrupted. Zerofold warns at startup if it detects
 one, but it cannot refuse to start. Use local storage.
+
+If you prefer a host directory to a named volume, it has to be writable by the unprivileged user
+the container runs as: `chown -R 65532:65532 /your/path`. Zerofold says so and exits rather than
+starting into a half-working state.
 
 ## Why another budgeting app
 
