@@ -11,3 +11,6 @@ data/
 *.sqlite-wal
 *.sqlite-shm
 .DS_Store
+.playwright-data/
+playwright-report/
+test-results/

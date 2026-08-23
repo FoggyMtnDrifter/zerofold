@@ -27,6 +27,27 @@ jobs:
       # No database service and no Testcontainers: SQLite tests run in-process against
       # :memory:, which is the point of ADR-0003.
 
+  e2e:
+    name: e2e acceptance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # Builds the app and runs the milestone acceptance criteria against the real server.
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   docker:
     name: docker build (${{ matrix.platform }})
     runs-on: ubuntu-latest
@@ -78,7 +99,7 @@ jobs:
 
   publish:
     name: publish to GHCR
-    needs: [check, docker]
+    needs: [check, e2e, docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
