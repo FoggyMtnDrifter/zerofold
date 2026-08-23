@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: typecheck · lint · test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # No database service and no Testcontainers: SQLite tests run in-process against
+      # :memory:, which is the point of ADR-0003.
+
+  docker:
+    name: docker build (${{ matrix.platform }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: false
+          load: true
+          tags: zerofold:ci
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+      - name: Native modules must actually load on this architecture
+        # better-sqlite3 and argon2 are compiled. A prebuild resolved for the wrong
+        # architecture fails only at runtime, and only on the affected machine — which for
+        # arm64 means a Raspberry Pi user finds it, not us.
+        run: |
+          docker run --rm --entrypoint /nodejs/bin/node zerofold:ci \
+            -e "const D=require('better-sqlite3');const d=new D(':memory:');d.pragma('journal_mode=WAL');console.log('better-sqlite3 OK on', process.arch)"
+
+      - name: Image size budget
+        run: |
+          BYTES=$(docker image inspect zerofold:ci --format '{{.Size}}')
+          MB=$((BYTES / 1024 / 1024))
+          echo "image size: ${MB}MB"
+          test "$MB" -lt 300 || { echo "::error::image is ${MB}MB, budget is 300MB"; exit 1; }
+
+      - name: Healthcheck reaches 200
+        run: |
+          docker run -d --name zf -p 3000:3000 zerofold:ci
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/healthz; then echo; echo "healthy after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          echo "::error::/healthz never returned 200"
+          docker logs zf
+          exit 1
+
+  publish:
+    name: publish to GHCR
+    needs: [check, docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,35 @@
+# Zerofold runs as a single container with a single volume.
+#
+# There is no database service: the data is one SQLite file inside the volume, which is what
+# makes backup a file copy. See ADR-0003.
+
+services:
+  zerofold:
+    image: ghcr.io/zerofold/zerofold:latest
+    # To build locally instead of pulling:
+    #   docker compose -f docker/compose.yml up --build
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      ZEROFOLD_BASE_URL: http://localhost:3000
+      ZEROFOLD_LOG_LEVEL: info
+    volumes:
+      - zerofold-data:/data
+    healthcheck:
+      # distroless has no shell or curl, so the check runs through node.
+      test:
+        - CMD
+        - /nodejs/bin/node
+        - -e
+        - "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  zerofold-data:

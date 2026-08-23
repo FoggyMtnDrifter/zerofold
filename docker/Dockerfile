@@ -1,0 +1,59 @@
+# syntax=docker/dockerfile:1.7
+#
+# Multi-stage build. The final image is distroless and non-root, and contains no package
+# manager, no shell, and no build toolchain.
+#
+# The base is Debian rather than Alpine deliberately: better-sqlite3 and @node-rs/argon2
+# publish no musl prebuilds, so an Alpine runtime would need a C compiler in the shipped
+# image. See ADR-0006.
+
+ARG NODE_VERSION=22
+
+# ── deps ─────────────────────────────────────────────────────────────────────────────
+# The full `node` image rather than `-slim`: better-sqlite3@13 publishes no prebuild for
+# linux/node22, so it falls back to node-gyp and needs Python and a C++ toolchain. The full
+# image already ships both, which avoids an `apt-get` round trip entirely. None of it reaches
+# the runtime image — that is the point of the multi-stage split.
+FROM node:${NODE_VERSION}-bookworm AS deps
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+RUN corepack enable
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json           apps/web/
+COPY packages/shared/package.json    packages/shared/
+COPY packages/db/package.json        packages/db/
+COPY packages/budget-engine/package.json packages/budget-engine/
+COPY packages/importers/package.json packages/importers/
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# ── build ────────────────────────────────────────────────────────────────────────────
+FROM deps AS build
+WORKDIR /app
+COPY . .
+RUN pnpm --filter @zerofold/web build
+
+# ── runtime ──────────────────────────────────────────────────────────────────────────
+FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian12 AS runtime
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    ZEROFOLD_DATA_DIR=/data \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+# Next's standalone output already contains the pruned node_modules it needs.
+COPY --from=build --chown=nonroot:nonroot /app/apps/web/.next/standalone ./
+COPY --from=build --chown=nonroot:nonroot /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=nonroot:nonroot /app/apps/web/public ./apps/web/public
+# SQL migrations are data, not code, so they are not part of the server bundle.
+COPY --from=build --chown=nonroot:nonroot /app/packages/db/migrations ./migrations
+COPY --from=build --chown=nonroot:nonroot /app/docker/entrypoint.mjs ./entrypoint.mjs
+
+USER nonroot
+VOLUME ["/data"]
+EXPOSE 3000
+
+# distroless' entrypoint is already node, so CMD is just the script.
+CMD ["/app/entrypoint.mjs"]
