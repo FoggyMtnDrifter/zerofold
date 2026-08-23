@@ -123,12 +123,27 @@ syncing client can remove its local copy. **This is exactly the mechanism propos
 than inferred. Our compat API must reproduce both halves — a full fetch that leaks tombstones
 would break every existing YNAB client.
 
-### Open — "close" versus "delete" was not reachable
+### R66 — "Close" is not reachable from the account UI at all (P0-11b)
 
-The Edit Account dialog offered **only "Delete Account"**; no "Close Account" control was
-present, despite `account.closed` existing in the API. Most likely YNAB gates closing on a
-zero balance. **Follow-up P0-11b:** zero an account's balance, then re-open the dialog and
-check whether a Close option appears.
+The hypothesis was that closing is gated on a zero balance. **It is not.** An account created
+with a balance of exactly **0** offers the same dialog as one holding $250: Account Nickname,
+Account Notes, Working Balance, Bank Connection, and **Delete Account**. No Close control
+appears at any balance.
+
+`account.closed` nonetheless exists in the API and is emitted on every account. It appears to
+be either legacy, or set by a path not present in the current web UI.
+
+**Product decision — we implement closing as a first-class operation.** It is the behaviour
+users actually want for an account they have stopped using: the history stays, the balance
+stays in net worth if relevant, and the sidebar stops showing it. Deleting is the destructive
+alternative, and offering only that (as the oracle currently does) pushes people toward
+discarding financial history to tidy a list.
+
+Recorded as divergence **D7**.
+
+> Incidental: a zero-balance account still receives a **$0.00 starting balance transaction**,
+> categorised to Inflow: Ready to Assign. The oracle always writes one; a register therefore
+> always has an origin row. See D8.
 
 ## Product notes (not YNAB rules — decisions for us)
 
