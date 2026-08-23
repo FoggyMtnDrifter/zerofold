@@ -26,11 +26,29 @@ export interface RegisterProps {
   readonly showAccount?: boolean
   readonly onLoadMore?: () => void
   readonly hasMore?: boolean
+  /**
+   * Selection is controlled when a parent supplies it, so bulk actions can act on it. The
+   * uncontrolled fallback keeps the component usable on its own — the dev harness renders it
+   * with no parent at all.
+   */
+  readonly selected?: ReadonlySet<string>
+  readonly onSelectedChange?: (next: ReadonlySet<string>) => void
+  readonly onActivate?: (row: RegisterRow) => void
 }
 
-export function Register({ rows, showAccount = false, onLoadMore, hasMore }: RegisterProps) {
+export function Register({
+  rows,
+  showAccount = false,
+  onLoadMore,
+  hasMore,
+  selected: controlledSelected,
+  onSelectedChange,
+  onActivate,
+}: RegisterProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  const [uncontrolled, setUncontrolled] = useState<ReadonlySet<string>>(new Set())
+  const selected = controlledSelected ?? uncontrolled
+  const setSelected = onSelectedChange ?? setUncontrolled
   const [focusedIndex, setFocusedIndex] = useState(0)
 
   const virtualizer = useVirtualizer({
@@ -59,14 +77,15 @@ export function Register({ rows, showAccount = false, onLoadMore, hasMore }: Reg
     return out
   }, [rows])
 
-  const toggle = useCallback((id: string) => {
-    setSelected((current) => {
-      const next = new Set(current)
+  const toggle = useCallback(
+    (id: string) => {
+      const next = new Set(selected)
       if (next.has(id)) next.delete(id)
       else next.add(id)
-      return next
-    })
-  }, [])
+      setSelected(next)
+    },
+    [selected, setSelected],
+  )
 
   /**
    * Keyboard traversal.
@@ -107,9 +126,23 @@ export function Register({ rows, showAccount = false, onLoadMore, hasMore }: Reg
           }
           return
         }
+        case 'Enter': {
+          const row = rows[focusedIndex]
+          if (row && onActivate) {
+            onActivate(row)
+            event.preventDefault()
+          }
+          return
+        }
+        case 'Escape':
+          if (selected.size > 0) {
+            setSelected(new Set())
+            event.preventDefault()
+          }
+          return
       }
     },
-    [focusedIndex, rows, toggle, virtualizer],
+    [focusedIndex, rows, toggle, virtualizer, onActivate, selected, setSelected],
   )
 
   // Load the next page while the user is still a screenful away from the end, so scrolling
@@ -162,6 +195,7 @@ export function Register({ rows, showAccount = false, onLoadMore, hasMore }: Reg
                 focused={item.index === focusedIndex}
                 rowIndex={item.index}
                 onToggle={toggle}
+                {...(onActivate ? { onActivate } : {})}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -192,6 +226,7 @@ function Row({
   focused,
   rowIndex,
   onToggle,
+  onActivate,
   style,
 }: {
   row: RegisterRow
@@ -201,6 +236,7 @@ function Row({
   focused: boolean
   rowIndex: number
   onToggle: (id: string) => void
+  onActivate?: (row: RegisterRow) => void
   style: React.CSSProperties
 }) {
   return (
@@ -208,6 +244,7 @@ function Row({
       role="row"
       aria-rowindex={rowIndex + 1}
       aria-selected={selected}
+      onDoubleClick={onActivate ? () => onActivate(row) : undefined}
       style={style}
       className={cn(
         'flex items-center gap-2 border-b border-hairline/60 px-3 text-sm',

@@ -25,7 +25,16 @@ export function NewPlanForm() {
     event.preventDefault()
     setError(null)
     setBusy(true)
-    const form = new FormData(event.currentTarget)
+    /**
+     * Capture the form before any `await`.
+     *
+     * React nulls `event.currentTarget` once the handler yields, so touching it after an await
+     * throws — and the throw silently skips everything after it. That is what made a saved
+     * transaction appear not to save: the write succeeded, then `currentTarget.reset()` threw
+     * and the refresh never ran.
+     */
+    const formEl = event.currentTarget
+    const form = new FormData(formEl)
     const result = await rpc('plan.create', {
       name: String(form.get('name')),
       timezone: String(form.get('timezone')),
