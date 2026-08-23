@@ -38,3 +38,5 @@ export type {
   UpdateTransactionInput,
 } from './transaction/mutate.ts'
 export { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
+export type { UndoState } from './undo/undo.ts'
+export { undoState } from './undo/undo.ts'

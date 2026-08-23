@@ -1,7 +1,7 @@
-import type { Db } from '@zerofold/db'
+import type { Db, UndoCommand } from '@zerofold/db'
 import { schema } from '@zerofold/db'
 import type { CalendarDate } from '@zerofold/shared/date'
-import { eq, sql } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { uuidv7 } from 'uuidv7'
 
 /**
@@ -17,6 +17,14 @@ export interface CommandContext {
   readonly today: CalendarDate
   readonly now: string
   readonly newId: () => string
+  /**
+   * True while an undo or redo is being applied.
+   *
+   * It lives here rather than on each command's input so that no command has to remember to
+   * forward it: a replayed write must not push a new undo entry, or the stack would grow as you
+   * walk it and undo would never reach the beginning.
+   */
+  readonly replaying?: boolean
 }
 
 export const makeContext = (
@@ -25,6 +33,9 @@ export const makeContext = (
   today: CalendarDate,
   now = new Date().toISOString(),
 ): CommandContext => ({ db, userId, today, now, newId: uuidv7 })
+
+/** The same context, in replay mode: writes apply but do not push new undo entries. */
+export const replaying = (ctx: CommandContext): CommandContext => ({ ...ctx, replaying: true })
 
 /**
  * A write against one plan.
@@ -38,11 +49,31 @@ export const makeContext = (
  * A delta request is then `WHERE knowledge_at_change > ?`, which is only correct if no write
  * can escape this path. That is the reason it exists rather than each command doing its own
  * bookkeeping.
+ *
+ * It is also where a command registers how to undo itself, so the undo entry and the change it
+ * inverts commit or roll back together (ADR-0008).
  */
 export interface PlanWrite {
   readonly knowledge: number
   /** Move the recompute watermark back to `month` if it is earlier than the current one. */
   markDirtyFrom(month: string): void
+  /**
+   * Record how to reverse this change, and how to reapply it.
+   *
+   * Commands that call this become undoable; commands that do not, are not — visibly, because
+   * the control reads the stack rather than guessing. Pass `groupId` to fold several writes into
+   * one step, so deleting eleven rows is one press of undo rather than eleven.
+   */
+  recordUndo(entry: UndoRegistration): void
+}
+
+export interface UndoRegistration {
+  /** Shown on the control, in the user's terms: "Delete 11 transactions". */
+  readonly label: string
+  readonly inverse: UndoCommand
+  readonly forward: UndoCommand
+  /** Defaults to a fresh group — one write, one step. */
+  readonly groupId?: string
 }
 
 export function withPlanWrite<T>(
@@ -63,6 +94,49 @@ export function withPlanWrite<T>(
 
     const write: PlanWrite = {
       knowledge,
+      recordUndo(entry) {
+        if (ctx.replaying) return
+
+        /*
+         * Anything new invalidates the redo stack.
+         *
+         * Deleting the undone entries rather than flagging them is deliberate: a redo entry that
+         * outlives the state it was recorded against would reapply a command whose subject may
+         * no longer exist, and "redo" would mean "attempt something from a world that ended".
+         */
+        tx.delete(schema.undoEntry)
+          .where(
+            and(
+              eq(schema.undoEntry.planId, planId),
+              eq(schema.undoEntry.userId, ctx.userId),
+              eq(schema.undoEntry.undone, true),
+            ),
+          )
+          .run()
+
+        const highest = tx
+          .select({ seq: schema.undoEntry.seq })
+          .from(schema.undoEntry)
+          .where(and(eq(schema.undoEntry.planId, planId), eq(schema.undoEntry.userId, ctx.userId)))
+          .orderBy(sql`${schema.undoEntry.seq} DESC`)
+          .limit(1)
+          .get()
+
+        tx.insert(schema.undoEntry)
+          .values({
+            id: ctx.newId(),
+            planId,
+            userId: ctx.userId,
+            seq: (highest?.seq ?? 0) + 1,
+            groupId: entry.groupId ?? ctx.newId(),
+            at: ctx.now,
+            label: entry.label,
+            inverse: entry.inverse,
+            forward: entry.forward,
+            undone: false,
+          })
+          .run()
+      },
       markDirtyFrom(month) {
         tx.insert(schema.planRecalc)
           .values({ planId, dirtyFromMonth: month, epoch: 0, lastRunAt: null, runningBy: null })

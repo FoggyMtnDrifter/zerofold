@@ -150,3 +150,45 @@ export const backupRecord = sqliteTable('backup_record', {
   trigger: text('trigger').$type<'scheduled' | 'manual' | 'pre_migration'>().notNull(),
   forDate: calendarDate('for_date'),
 })
+
+/**
+ * The undo stack: one entry per user action, holding the command that reverses it.
+ *
+ * Written inside the same transaction as the change it inverts (see `withPlanWrite`), so an
+ * entry cannot survive a rolled-back write. ADR-0008 explains why this stores commands rather
+ * than row images.
+ */
+export const undoEntry = sqliteTable(
+  'undo_entry',
+  {
+    id: id(),
+    planId: ref('plan_id').notNull(),
+    /** Undo is per person: one user's Ctrl-Z does not reach into another's work. */
+    userId: ref('user_id').notNull(),
+    /**
+     * Order within a plan. Monotonic and gap-tolerant — it orders entries, it does not count
+     * them, so a rolled-back transaction leaving a hole is harmless.
+     */
+    seq: int('seq').notNull(),
+    /** One user action is one step, even when it performed many writes. */
+    groupId: ref('group_id').notNull(),
+    at: timestamp('at').notNull(),
+    /** Shown on the control, in the user's terms: "Delete 11 transactions". */
+    label: text('label').notNull(),
+    /** The command that reverses the change. */
+    inverse: json<UndoCommand>('inverse').notNull(),
+    /** The command that reapplies it, for redo. */
+    forward: json<UndoCommand>('forward').notNull(),
+    undone: bool('undone').notNull().default(false),
+  },
+  (t) => [
+    index('undo_entry_stack').on(t.planId, t.userId, t.seq),
+    index('undo_entry_group').on(t.groupId),
+  ],
+)
+
+/** A procedure name and its input, as the RPC layer would receive them. */
+export interface UndoCommand {
+  readonly procedure: string
+  readonly input: Record<string, unknown>
+}

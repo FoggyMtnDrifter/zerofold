@@ -117,4 +117,49 @@ test.describe
       await page.getByRole('button', { name: 'Update' }).click()
       await expect(page.getByRole('alert').filter({ hasText: 'has been reconciled' })).toBeVisible()
     })
+
+    test('undo reverses the last change, and redo puts it back', async () => {
+      // Undoing the forced edit from the previous test: its inverse carries `force`, because a
+      // row that was reconciled when it was edited is still reconciled when you change your mind.
+      await expect(page.getByRole('button', { name: /^Undo edit transaction/ })).toBeVisible()
+      await page.getByRole('button', { name: /^Undo edit transaction/ }).click()
+
+      await expect(
+        page.getByRole('row').filter({ hasText: 'checked against the statement' }),
+      ).toBeHidden()
+
+      await page.getByRole('button', { name: /^Redo edit transaction/ }).click()
+      await expect(
+        page.getByRole('row').filter({ hasText: 'checked against the statement' }),
+      ).toBeVisible()
+    })
+
+    test('a bulk delete undoes as one step', async () => {
+      // Its own rows, because reconciliation has locked everything already in the register and a
+      // bulk delete over those would be testing R71 rather than grouping.
+      // The form stays open after a save, ready for the next entry, so it is opened once.
+      await page.getByRole('button', { name: 'Add transaction' }).click()
+      for (const memo of ['bulk one', 'bulk two']) {
+        await page.getByRole('textbox', { name: 'Outflow' }).fill('1.00')
+        await page.getByRole('textbox', { name: 'Memo' }).fill(memo)
+        await page.getByRole('button', { name: 'Save' }).click()
+        await expect(page.getByRole('row').filter({ hasText: memo })).toBeVisible()
+      }
+      await page.getByRole('button', { name: 'Cancel' }).click()
+
+      await page.getByRole('checkbox', { name: /Select bulk one/ }).click()
+      await page.getByRole('checkbox', { name: /Select bulk two/ }).click()
+      await page.getByRole('button', { name: 'Delete', exact: true }).click()
+
+      await expect(page.getByRole('row').filter({ hasText: 'bulk one' })).toBeHidden()
+      await expect(page.getByRole('row').filter({ hasText: 'bulk two' })).toBeHidden()
+
+      // The label counts what it will restore, and one press restores all of it.
+      const undo = page.getByRole('button', { name: 'Undo delete 2 transactions' })
+      await expect(undo).toBeVisible()
+      await undo.click()
+
+      await expect(page.getByRole('row').filter({ hasText: 'bulk one' })).toBeVisible()
+      await expect(page.getByRole('row').filter({ hasText: 'bulk two' })).toBeVisible()
+    })
   })

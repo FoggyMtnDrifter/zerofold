@@ -28,6 +28,13 @@ export interface UpdateTransactionInput extends TransactionRef {
   readonly flagColor?: schema.FlagColor | null | undefined
   /** Editing a reconciled row requires saying so explicitly. See R71. */
   readonly force?: boolean | undefined
+  /** Folds this write into an existing undo step, so a bulk action undoes as one. */
+  readonly groupId?: string | undefined
+  /**
+   * What the undo control should say. Supplied by the caller for a grouped action, because only
+   * the caller knows it is deleting eleven rows rather than one.
+   */
+  readonly groupLabel?: string | undefined
 }
 
 function load(ctx: CommandContext, ref: TransactionRef): Txn {
@@ -107,6 +114,51 @@ export function updateTransaction(ctx: CommandContext, input: UpdateTransactionI
     const amount = input.amount ?? existing.amount
     const cleared = input.cleared ?? existing.cleared
 
+    /*
+     * The inverse restores the whole row, not only the fields this call changed.
+     *
+     * Naming just the changed fields would produce a smaller entry that is wrong the moment two
+     * edits overlap: undoing the second would leave the first's fields at whatever the second
+     * happened to write. `force` is set because undo must not be stopped by the reconciled lock
+     * — the user is asking to go back to a state that was already reconciled.
+     */
+    write.recordUndo({
+      label: input.groupLabel ?? 'Edit transaction',
+      inverse: {
+        procedure: 'transaction.update',
+        input: {
+          planId: input.planId,
+          transactionId: existing.id,
+          date: existing.date,
+          amount: existing.amount.toString(),
+          payeeId: existing.payeeId,
+          categoryId: existing.categoryId,
+          memo: existing.memo,
+          cleared: existing.cleared,
+          approved: existing.approved,
+          flagColor: existing.flagColor,
+          force: true,
+        },
+      },
+      forward: {
+        procedure: 'transaction.update',
+        input: {
+          planId: input.planId,
+          transactionId: existing.id,
+          date,
+          amount: amount.toString(),
+          payeeId: input.payeeId ?? existing.payeeId,
+          categoryId: input.categoryId ?? existing.categoryId,
+          memo: input.memo ?? existing.memo,
+          cleared,
+          approved: input.approved ?? existing.approved,
+          flagColor: input.flagColor ?? existing.flagColor,
+          force: true,
+        },
+      },
+      ...(input.groupId ? { groupId: input.groupId } : {}),
+    })
+
     // Reverse the old contribution, then apply the new. Doing it as a delta on the changed
     // field only would be wrong whenever `cleared` changes, because the amount then has to move
     // between two different columns.
@@ -174,6 +226,10 @@ export function updateTransaction(ctx: CommandContext, input: UpdateTransactionI
 
 export interface DeleteTransactionInput extends TransactionRef {
   readonly force?: boolean | undefined
+  /** Folds this write into an existing undo step, so a bulk action undoes as one. */
+  readonly groupId?: string | undefined
+  /** What the undo control should say; see `UpdateTransactionInput`. */
+  readonly groupLabel?: string | undefined
 }
 
 /**
@@ -189,6 +245,19 @@ export function deleteTransaction(ctx: CommandContext, input: DeleteTransactionI
 
   withPlanWrite(ctx, input.planId, (write) => {
     const stamp = { deleted: true, knowledgeAtChange: write.knowledge, updatedAt: ctx.now }
+
+    write.recordUndo({
+      label: input.groupLabel ?? 'Delete transaction',
+      inverse: {
+        procedure: 'transaction.restore',
+        input: { planId: input.planId, transactionId: existing.id },
+      },
+      forward: {
+        procedure: 'transaction.delete',
+        input: { planId: input.planId, transactionId: existing.id, force: true },
+      },
+      ...(input.groupId ? { groupId: input.groupId } : {}),
+    })
 
     unapply(ctx, existing, write)
     ctx.db.update(schema.transaction).set(stamp).where(eq(schema.transaction.id, existing.id)).run()
@@ -209,6 +278,68 @@ export function deleteTransaction(ctx: CommandContext, input: DeleteTransactionI
         ctx.db.update(schema.transaction).set(stamp).where(eq(schema.transaction.id, far.id)).run()
       }
     }
+
+    write.markDirtyFrom(monthOf(existing.date))
+  })
+}
+
+/**
+ * Undo a deletion: clear the tombstone and put the money back.
+ *
+ * Deletion is soft, so this is a restoration rather than a re-creation — the row keeps its id,
+ * which is what lets the undo entry for it stay valid, and what lets a delta request describe
+ * the round trip as two changes to one transaction rather than a disappearance and an arrival.
+ */
+export function restoreTransaction(ctx: CommandContext, input: TransactionRef): void {
+  const existing = ctx.db
+    .select()
+    .from(schema.transaction)
+    .where(
+      and(
+        eq(schema.transaction.id, input.transactionId),
+        eq(schema.transaction.planId, input.planId),
+      ),
+    )
+    .get()
+
+  if (!existing) throw new CommandError('No such transaction.', 'transaction.not_found')
+  if (!existing.deleted) return
+
+  withPlanWrite(ctx, input.planId, (write) => {
+    const stamp = { deleted: false, knowledgeAtChange: write.knowledge, updatedAt: ctx.now }
+
+    applyDelta(ctx, existing.accountId, existing.amount, existing.cleared, write)
+    ctx.db.update(schema.transaction).set(stamp).where(eq(schema.transaction.id, existing.id)).run()
+    ctx.db
+      .update(schema.subtransaction)
+      .set(stamp)
+      .where(eq(schema.subtransaction.transactionId, existing.id))
+      .run()
+
+    // Both legs went together; they come back together, or the plan does not balance.
+    if (existing.transferTransactionId) {
+      const far = ctx.db
+        .select()
+        .from(schema.transaction)
+        .where(eq(schema.transaction.id, existing.transferTransactionId))
+        .get()
+      if (far?.deleted) {
+        applyDelta(ctx, far.accountId, far.amount, far.cleared, write)
+        ctx.db.update(schema.transaction).set(stamp).where(eq(schema.transaction.id, far.id)).run()
+      }
+    }
+
+    write.recordUndo({
+      label: 'Restore transaction',
+      inverse: {
+        procedure: 'transaction.delete',
+        input: { planId: input.planId, transactionId: existing.id, force: true },
+      },
+      forward: {
+        procedure: 'transaction.restore',
+        input: { planId: input.planId, transactionId: existing.id },
+      },
+    })
 
     write.markDirtyFrom(monthOf(existing.date))
   })

@@ -25,6 +25,10 @@ export interface CreateTransactionInput {
   readonly flagColor?: schema.FlagColor | null | undefined
   readonly importId?: string | null | undefined
   readonly subtransactions?: readonly SubtransactionInput[] | undefined
+  /** Folds this write into an existing undo step, so a bulk action undoes as one. */
+  readonly groupId?: string | undefined
+  /** What the undo control should say, when a caller is performing one action as many writes. */
+  readonly groupLabel?: string | undefined
 }
 
 export interface CreateTransactionResult {
@@ -215,6 +219,27 @@ function insert(
 
   write.markDirtyFrom(`${input.date.slice(0, 7)}-01`)
   extendFirstMonth(ctx, input.planId, input.date)
+
+  /*
+   * Undoing a creation deletes it; redoing restores that same row rather than making a new one.
+   *
+   * Re-creating would mint a fresh id, orphaning this entry and every later one that names the
+   * original. Because deletion is soft, the row is still there to bring back — so a create /
+   * undo / redo round trip leaves the same transaction, with the same id, that a client's delta
+   * request has been tracking all along.
+   */
+  write.recordUndo({
+    label: input.groupLabel ?? 'Add transaction',
+    inverse: {
+      procedure: 'transaction.delete',
+      input: { planId: input.planId, transactionId, force: true },
+    },
+    forward: {
+      procedure: 'transaction.restore',
+      input: { planId: input.planId, transactionId },
+    },
+    ...(input.groupId ? { groupId: input.groupId } : {}),
+  })
 
   if (strippedCategory) {
     // Not an error — the oracle does the same — but a silent discard is how a client comes to

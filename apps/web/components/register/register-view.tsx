@@ -8,6 +8,7 @@ import type { PickerOption } from './picker'
 import { Register } from './register'
 import { TransactionForm } from './transaction-form'
 import type { RegisterRow } from './types'
+import { UndoBar, type UndoState } from './undo-bar'
 
 export interface RegisterViewProps {
   readonly planId: string
@@ -16,6 +17,7 @@ export interface RegisterViewProps {
   readonly rows: readonly RegisterRow[]
   readonly payees: readonly PickerOption[]
   readonly categories: readonly PickerOption[]
+  readonly undo: UndoState
 }
 
 /**
@@ -31,6 +33,7 @@ export function RegisterView({
   rows,
   payees,
   categories,
+  undo,
 }: RegisterViewProps) {
   const router = useRouter()
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
@@ -50,17 +53,25 @@ export function RegisterView({
    */
   async function applyToSelection(
     label: string,
-    action: (id: string) => Promise<RpcResult<unknown>>,
+    action: (
+      id: string,
+      group: { groupId: string; groupLabel: string },
+    ) => Promise<RpcResult<unknown>>,
   ) {
     setError(null)
     const ids = [...selected]
+    // One group id for the whole batch, so eleven deletions undo as one press rather than as
+    // eleven. Generated here because "one user action" is a fact about this click, not about
+    // any single write it performs.
+    const groupId = crypto.randomUUID()
+    const noun = ids.length === 1 ? 'transaction' : `${ids.length} transactions`
     for (const [index, id] of ids.entries()) {
-      const result = await action(id)
+      const result = await action(id, { groupId, groupLabel: `${label} ${noun}` })
       if ('error' in result) {
         setError(
           index === 0
             ? result.error.message
-            : `${label} stopped after ${index} of ${ids.length}: ${result.error.message}`,
+            : `Stopped after ${index} of ${ids.length}: ${result.error.message}`,
         )
         break
       }
@@ -70,17 +81,31 @@ export function RegisterView({
   }
 
   const approveSelected = () =>
-    applyToSelection('Approving', (transactionId) =>
-      rpc('transaction.update', { planId, transactionId, approved: true }),
+    applyToSelection('Approve', (transactionId, group) =>
+      rpc('transaction.update', { planId, transactionId, approved: true, ...group }),
     )
 
   const deleteSelected = () =>
-    applyToSelection('Deleting', (transactionId) =>
-      rpc('transaction.delete', { planId, transactionId }),
+    applyToSelection('Delete', (transactionId, group) =>
+      rpc('transaction.delete', { planId, transactionId, ...group }),
     )
 
   return (
     <div className="flex h-full flex-col">
+      {/*
+       * Undo closes any open editor. The form holds a snapshot of a row taken when it opened, and
+       * an undo may have just changed that row underneath it — leaving it open would invite
+       * saving stale values straight back over the change that was reversed.
+       */}
+      <UndoBar
+        planId={planId}
+        state={undo}
+        onChanged={() => {
+          setEditing(null)
+          refresh()
+        }}
+      />
+
       {/*
        * Keyed by the row under edit so switching rows remounts the form.
        *

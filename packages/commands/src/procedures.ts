@@ -10,12 +10,13 @@ import {
   reopenAccount,
 } from './account/lifecycle.ts'
 import { authorizePlan, type Role } from './authorize.ts'
-import { makeContext } from './context.ts'
+import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
 import { createPlan } from './plan/create-plan.ts'
 import { reconcile } from './reconcile/reconcile.ts'
 import { createTransaction } from './transaction/create-transaction.ts'
 import { listTransactions } from './transaction/list.ts'
-import { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
+import { deleteTransaction, restoreTransaction, updateTransaction } from './transaction/mutate.ts'
+import { markUndone, nextRedo, nextUndo, undoState } from './undo/undo.ts'
 
 /**
  * Milliunits arrive as a string so JSON never carries a lossy number, and the brand is
@@ -200,6 +201,9 @@ export const procedures = {
       approved: z.boolean().optional(),
       flagColor: z.enum(['red', 'orange', 'yellow', 'green', 'blue', 'purple']).nullish(),
       force: z.boolean().optional(),
+      // Supplied by a caller performing one user action as several writes, so they undo as one.
+      groupId: z.string().min(1).optional(),
+      groupLabel: z.string().min(1).max(80).optional(),
     }),
     plan: 'editor',
     handler: ({ db, userId, today, input }) => {
@@ -212,12 +216,44 @@ export const procedures = {
     input: planScoped.extend({
       transactionId: z.string().min(1),
       force: z.boolean().optional(),
+      groupId: z.string().min(1).optional(),
+      groupLabel: z.string().min(1).max(80).optional(),
     }),
     plan: 'editor',
     handler: ({ db, userId, today, input }) => {
       deleteTransaction(makeContext(db, userId, today), input)
       return { ok: true as const }
     },
+  }),
+
+  'transaction.restore': define({
+    input: planScoped.extend({ transactionId: z.string().min(1) }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      restoreTransaction(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'undo.state': define({
+    input: planScoped,
+    plan: 'viewer',
+    handler: ({ db, userId, today, input }) =>
+      undoState(makeContext(db, userId, today), input.planId),
+  }),
+
+  'undo.perform': define({
+    input: planScoped,
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) =>
+      walk(makeContext(db, userId, today), input.planId, 'undo'),
+  }),
+
+  'undo.redo': define({
+    input: planScoped,
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) =>
+      walk(makeContext(db, userId, today), input.planId, 'redo'),
   }),
 
   'account.reconcile': define({
@@ -230,6 +266,57 @@ export const procedures = {
     handler: ({ db, userId, today, input }) => reconcile(makeContext(db, userId, today), input),
   }),
 } as const
+
+/**
+ * The commands an undo entry is allowed to name.
+ *
+ * An explicit table rather than a lookup into `procedures`, because those two sets are not the
+ * same one and should not silently become so: `plan.create` has no business being replayed by an
+ * undo entry, and a stack entry naming something absent here fails loudly instead of quietly
+ * doing nothing.
+ */
+const REPLAYABLE: Record<string, (ctx: CommandContext, input: unknown) => void> = {
+  'transaction.update': (ctx, input) => {
+    updateTransaction(ctx, procedures['transaction.update'].input.parse(input))
+  },
+  'transaction.delete': (ctx, input) => {
+    deleteTransaction(ctx, procedures['transaction.delete'].input.parse(input))
+  },
+  'transaction.restore': (ctx, input) => {
+    restoreTransaction(ctx, procedures['transaction.restore'].input.parse(input))
+  },
+}
+
+/**
+ * Walk the stack one step.
+ *
+ * The whole group runs inside one database transaction: a bulk delete of eleven rows must come
+ * back as eleven rows or as none, never as six. `replaying` keeps the replayed writes from
+ * pushing entries of their own onto the stack being walked.
+ */
+function walk(ctx: CommandContext, planId: string, direction: 'undo' | 'redo') {
+  const entries = direction === 'undo' ? nextUndo(ctx, planId) : nextRedo(ctx, planId)
+
+  return ctx.db.transaction(() => {
+    const replay = replaying(ctx)
+    for (const entry of entries) {
+      const run = REPLAYABLE[entry.command.procedure]
+      if (!run) {
+        throw new CommandError(
+          `That change cannot be reversed automatically (${entry.command.procedure}).`,
+          'undo.not_replayable',
+        )
+      }
+      run(replay, entry.command.input)
+    }
+    markUndone(
+      ctx,
+      entries.map((e) => e.id),
+      direction === 'undo',
+    )
+    return { label: entries[0]?.label ?? '', steps: entries.length }
+  })
+}
 
 export type ProcedureName = keyof typeof procedures
 export type ProcedureInput<N extends ProcedureName> = z.input<(typeof procedures)[N]['input']>

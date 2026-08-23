@@ -1,4 +1,10 @@
-import { accountTotals, authorizePlan, listTransactions } from '@zerofold/commands'
+import {
+  accountTotals,
+  authorizePlan,
+  listTransactions,
+  makeContext,
+  undoState,
+} from '@zerofold/commands'
 import { schema } from '@zerofold/db'
 import { and, eq, isNull, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
@@ -38,6 +44,7 @@ export default async function AccountRegister({
 
   const { rows } = listTransactions(db, { planId, accountId, limit: FIRST_PAGE })
   const totals = accountTotals(db, planId, accountId)
+  const undo = undoState(makeContext(db, user.id, todayIn(plan.timezone)), planId)
 
   /**
    * Payees, with transfer payees grouped separately.
@@ -121,6 +128,7 @@ export default async function AccountRegister({
           rows={rows}
           payees={payees}
           categories={categories}
+          undo={undo}
         />
       </div>
     </div>
