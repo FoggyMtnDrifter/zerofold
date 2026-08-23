@@ -177,7 +177,7 @@ export function Register({ rows, showAccount = false, onLoadMore, hasMore }: Reg
       </div>
 
       <div className="border-t bg-surface px-3 py-1.5 text-2xs text-ink-subtle">
-        {rows.length.toLocaleString()} transactions
+        {rows.length.toLocaleString()} {rows.length === 1 ? 'transaction' : 'transactions'}
         {selected.size > 0 && ` · ${selected.size} selected`}
       </div>
     </div>

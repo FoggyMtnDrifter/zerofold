@@ -1,4 +1,5 @@
 import { Landmark, PieChart, Wallet } from 'lucide-react'
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { Money } from '@/components/money'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -12,6 +13,8 @@ export interface SidebarAccount {
   readonly balance: bigint
   readonly onBudget: boolean
   readonly type: string
+  /** Present once the account has a register to link to. */
+  readonly planId?: string
 }
 
 const GROUPS = [
@@ -112,6 +115,36 @@ function NavLink({
   )
 }
 
+/**
+ * A real link when there is somewhere to go, a button otherwise.
+ *
+ * An anchor whose href goes nowhere breaks middle-click, offers a meaningless target to a
+ * screen reader, and silently becomes a bug the day someone assumes it navigates — so the
+ * element follows the capability rather than the appearance.
+ */
+function AccountLink({ account }: { account: SidebarAccount }) {
+  const className =
+    'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm text-ink-muted transition-colors hover:bg-sidebar-accent hover:text-ink'
+  const content = (
+    <>
+      <span className="truncate">{account.name}</span>
+      <Money amount={account.balance} className="shrink-0 text-xs" />
+    </>
+  )
+  if (!account.planId) {
+    return (
+      <button type="button" className={className}>
+        {content}
+      </button>
+    )
+  }
+  return (
+    <Link href={`/plans/${account.planId}/accounts/${account.id}`} className={className}>
+      {content}
+    </Link>
+  )
+}
+
 function AccountGroup({ label, accounts }: { label: string; accounts: readonly SidebarAccount[] }) {
   const total = accounts.reduce((sum, a) => sum + a.balance, 0n)
   return (
@@ -123,13 +156,7 @@ function AccountGroup({ label, accounts }: { label: string; accounts: readonly S
       <ul>
         {accounts.map((account) => (
           <li key={account.id}>
-            <button
-              type="button"
-              className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm text-ink-muted transition-colors hover:bg-sidebar-accent hover:text-ink"
-            >
-              <span className="truncate">{account.name}</span>
-              <Money amount={account.balance} className="shrink-0 text-xs" />
-            </button>
+            <AccountLink account={account} />
           </li>
         ))}
       </ul>
