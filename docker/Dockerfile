@@ -33,6 +33,12 @@ FROM deps AS build
 WORKDIR /app
 COPY . .
 RUN pnpm --filter @zerofold/web build
+
+# Next's standalone output keeps pnpm's .pnpm store layout but not the resolution symlinks, so
+# `better-sqlite3` is present yet unresolvable from /app. The CLI runs outside the bundle and
+# needs it, so dereference one copy into a plain node_modules directory.
+RUN mkdir -p /skel && cp -RL /app/node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 /skel/better-sqlite3
+
 # A skeleton data directory. distroless has no shell, so it cannot `RUN mkdir` — the directory
 # must arrive as a COPY with the right ownership, otherwise /data is root-owned and the
 # non-root user cannot write the session secret or the database.
@@ -55,6 +61,8 @@ COPY --from=build --chown=nonroot:nonroot /app/apps/web/public ./apps/web/public
 # SQL migrations are data, not code, so they are not part of the server bundle.
 COPY --from=build --chown=nonroot:nonroot /app/packages/db/migrations ./migrations
 COPY --from=build --chown=nonroot:nonroot /app/docker/entrypoint.mjs ./entrypoint.mjs
+COPY --from=build --chown=nonroot:nonroot /app/docker/cli.mjs ./cli.mjs
+COPY --from=build --chown=nonroot:nonroot /skel/better-sqlite3 ./node_modules/better-sqlite3
 # Ships an empty, correctly-owned /data. A named volume mounted here inherits this ownership
 # on first use, so `docker run -v zerofold-data:/data` works with no host-side chown.
 COPY --from=build --chown=nonroot:nonroot /skel/data /data
