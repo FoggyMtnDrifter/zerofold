@@ -1,0 +1,125 @@
+{
+ "S": {
+  "checking": "6c5c3d38-c505-48c4-b95b-cc4ae790dc4b",
+  "inflow": "5b15bc2b-2df9-4a4e-b4de-779b73478a5d",
+  "C1": "1b307646-4ac1-4232-b44a-986029e6553b",
+  "C2": "8df3fad1-d8f3-4fd7-876c-e2fdcaa2c77d",
+  "C3": "e5062dfb-6d21-486b-95f5-fe3b63de2d90"
+ },
+ "log": [
+  {
+   "step": "pre",
+   "data": {
+    "AUG": {
+     "RTA": 900000,
+     "income": 1000000,
+     "budgeted": 100000,
+     "activity": -140000,
+     "C1_bal": -40000,
+     "C1_bud": 100000,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "SEP": {
+     "RTA": 860000,
+     "income": 0,
+     "budgeted": 0,
+     "activity": 0,
+     "C1_bal": 0,
+     "C1_bud": 0,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "OCT": {
+     "RTA": 860000,
+     "income": 0,
+     "budgeted": 0,
+     "activity": 0,
+     "C1_bal": 0,
+     "C1_bud": 0,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "NOV": {
+     "RTA": "—404—"
+    }
+   }
+  },
+  {
+   "step": "assign 250000 to C2 in SEP",
+   "data": {
+    "AUG": {
+     "RTA": 650000,
+     "income": 1000000,
+     "budgeted": 100000,
+     "activity": -140000,
+     "C1_bal": -40000,
+     "C1_bud": 100000,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "SEP": {
+     "RTA": 610000,
+     "income": 0,
+     "budgeted": 250000,
+     "activity": 0,
+     "C1_bal": 0,
+     "C1_bud": 0,
+     "C2_bal": 250000,
+     "C2_bud": 250000
+    },
+    "OCT": {
+     "RTA": 610000,
+     "income": 0,
+     "budgeted": 0,
+     "activity": 0,
+     "C1_bal": 0,
+     "C1_bud": 0,
+     "C2_bal": 250000,
+     "C2_bud": 0
+    },
+    "NOV": {
+     "RTA": "—404—"
+    }
+   }
+  },
+  {
+   "step": "revert",
+   "data": {
+    "AUG": {
+     "RTA": 900000,
+     "income": 1000000,
+     "budgeted": 100000,
+     "activity": -140000,
+     "C1_bal": -40000,
+     "C1_bud": 100000,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "SEP": {
+     "RTA": 860000,
+     "income": 0,
+     "budgeted": 0,
+     "activity": 0,
+     "C1_bal": 0,
+     "C1_bud": 0,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "OCT": {
+     "RTA": 860000,
+     "income": 0,
+     "budgeted": 0,
+     "activity": 0,
+     "C1_bal": 0,
+     "C1_bud": 0,
+     "C2_bal": 0,
+     "C2_bud": 0
+    },
+    "NOV": {
+     "RTA": "—404—"
+    }
+   }
+  }
+ ]
+}
