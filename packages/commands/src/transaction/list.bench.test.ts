@@ -1,5 +1,5 @@
 import { schema } from '@zerofold/db'
-import { milli, ZERO } from '@zerofold/shared/money'
+import { ZERO } from '@zerofold/shared/money'
 import { and, eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createAccount } from '../account/create-account.ts'
