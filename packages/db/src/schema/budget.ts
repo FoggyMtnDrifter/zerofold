@@ -1,10 +1,11 @@
 import { sql } from 'drizzle-orm'
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import {
   bool,
   budgetMonth,
   calendarDate,
   id,
+  int,
   json,
   money,
   planScoped,
@@ -27,7 +28,7 @@ export const account = sqliteTable(
     onBudget: bool('on_budget').notNull(),
     closed: bool('closed').notNull().default(false),
     note: text('note'),
-    sortOrder: integer('sort_order').notNull().default(0),
+    sortOrder: int('sort_order').notNull().default(0),
 
     /** The auto-created "Transfer : <name>" payee representing this account. */
     transferPayeeId: ref('transfer_payee_id'),
@@ -107,7 +108,7 @@ export const categoryGroup = sqliteTable(
     ...planScoped,
     name: text('name').notNull(),
     hidden: bool('hidden').notNull().default(false),
-    sortOrder: integer('sort_order').notNull().default(0),
+    sortOrder: int('sort_order').notNull().default(0),
     /** `internal_master`, `credit_card_payments`, `hidden` — YNAB marks all three (R48). */
     internalKind: text('internal_kind').$type<GroupKind>(),
     ...timestamps,
@@ -124,7 +125,7 @@ export const category = sqliteTable(
     name: text('name').notNull(),
     note: text('note'),
     hidden: bool('hidden').notNull().default(false),
-    sortOrder: integer('sort_order').notNull().default(0),
+    sortOrder: int('sort_order').notNull().default(0),
 
     /**
      * Our classification, richer than YNAB's wire `internal` boolean.
@@ -174,10 +175,10 @@ export const categoryTarget = sqliteTable(
     goalTargetMonth: budgetMonth('goal_target_month'),
 
     /** Day of month (1–31), or day of week (0=Sunday) when the cadence is weekly (R29). */
-    goalDay: integer('goal_day'),
+    goalDay: int('goal_day'),
     /** 1 monthly, 2 weekly, 13 yearly (R25, R29, R31a). NEED only — null for TB/TBD. */
-    goalCadence: integer('goal_cadence'),
-    goalCadenceFrequency: integer('goal_cadence_frequency'),
+    goalCadence: int('goal_cadence'),
+    goalCadenceFrequency: int('goal_cadence_frequency'),
 
     /**
      * `true` = set-aside, `false` = refill (R25). Defaults to set-aside when unspecified,

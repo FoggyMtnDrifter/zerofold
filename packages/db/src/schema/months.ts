@@ -1,5 +1,15 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
-import { bool, budgetMonth, id, money, planScoped, ref, timestamp, timestamps } from './columns.ts'
+import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import {
+  bool,
+  budgetMonth,
+  id,
+  int,
+  money,
+  planScoped,
+  ref,
+  timestamp,
+  timestamps,
+} from './columns.ts'
 
 export const month = sqliteTable(
   'month',
@@ -14,10 +24,10 @@ export const month = sqliteTable(
     activity: money('activity').notNull(),
     toBeBudgeted: money('to_be_budgeted').notNull(),
     /** Null below the 10-spending-transaction floor; 0 before any spending (R65). */
-    ageOfMoney: integer('age_of_money'),
+    ageOfMoney: int('age_of_money'),
 
-    cacheEpoch: integer('cache_epoch').notNull().default(0),
-    knowledgeAtChange: integer('knowledge_at_change').notNull().default(0),
+    cacheEpoch: int('cache_epoch').notNull().default(0),
+    knowledgeAtChange: int('knowledge_at_change').notNull().default(0),
     deleted: bool('deleted').notNull().default(false),
   },
   (t) => [uniqueIndex('month_pk').on(t.planId, t.month)],
@@ -48,8 +58,8 @@ export const monthCategory = sqliteTable(
     // ── derived target figures ──
     goalTargetSnapshot: money('goal_target_snapshot'),
     goalUnderFunded: money('goal_under_funded'),
-    goalPercentageComplete: integer('goal_percentage_complete'),
-    goalMonthsToBudget: integer('goal_months_to_budget'),
+    goalPercentageComplete: int('goal_percentage_complete'),
+    goalMonthsToBudget: int('goal_months_to_budget'),
     goalOverallFunded: money('goal_overall_funded'),
     goalOverallLeft: money('goal_overall_left'),
 
@@ -63,7 +73,7 @@ export const monthCategory = sqliteTable(
      */
     goalSnoozedAt: timestamp('goal_snoozed_at'),
 
-    cacheEpoch: integer('cache_epoch').notNull().default(0),
+    cacheEpoch: int('cache_epoch').notNull().default(0),
 
     /**
      * The date these derived values were computed for.
@@ -75,7 +85,7 @@ export const monthCategory = sqliteTable(
      */
     derivedForDate: text('derived_for_date'),
 
-    knowledgeAtChange: integer('knowledge_at_change').notNull().default(0),
+    knowledgeAtChange: int('knowledge_at_change').notNull().default(0),
     deleted: bool('deleted').notNull().default(false),
   },
   (t) => [

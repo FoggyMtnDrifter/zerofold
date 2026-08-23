@@ -1,5 +1,5 @@
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
-import { bool, budgetMonth, id, json, ref, timestamp, timestamps } from './columns.ts'
+import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { bool, budgetMonth, id, int, json, ref, timestamp, timestamps } from './columns.ts'
 import type { MembershipRole } from './enums.ts'
 
 /** YNAB's CurrencyFormat shape, emitted verbatim by the compatibility API. */
@@ -19,7 +19,7 @@ export const plan = sqliteTable('plan', {
   name: text('name').notNull(),
   currencyFormat: json<CurrencyFormat>('currency_format').notNull(),
   dateFormat: text('date_format').notNull().default('MM/DD/YYYY'),
-  firstDayOfWeek: integer('first_day_of_week').notNull().default(0),
+  firstDayOfWeek: int('first_day_of_week').notNull().default(0),
 
   /**
    * IANA timezone. The **only** source of "today" for this plan — ADR-0005.
@@ -38,7 +38,7 @@ export const plan = sqliteTable('plan', {
    * Monotonic per-plan counter for delta requests. Incremented once per write transaction;
    * every row touched records the new value in `knowledge_at_change`.
    */
-  serverKnowledge: integer('server_knowledge').notNull().default(0),
+  serverKnowledge: int('server_knowledge').notNull().default(0),
 
   deleted: bool('deleted').notNull().default(false),
   ...timestamps,
@@ -68,7 +68,7 @@ export const planMembership = sqliteTable(
 export const planRecalc = sqliteTable('plan_recalc', {
   planId: ref('plan_id').primaryKey(),
   dirtyFromMonth: budgetMonth('dirty_from_month'),
-  epoch: integer('epoch').notNull().default(0),
+  epoch: int('epoch').notNull().default(0),
   lastRunAt: timestamp('last_run_at'),
   runningBy: text('running_by'),
 })
@@ -83,7 +83,7 @@ export const carryCheckpoint = sqliteTable(
     planId: ref('plan_id').notNull(),
     month: budgetMonth('month').notNull(),
     state: json<unknown>('state').notNull(),
-    epoch: integer('epoch').notNull(),
+    epoch: int('epoch').notNull(),
   },
   (t) => [uniqueIndex('carry_checkpoint_pk').on(t.planId, t.month)],
 )

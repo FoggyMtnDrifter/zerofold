@@ -26,6 +26,25 @@ const milliunits = customType<{ data: Milliunits; driverData: bigint | number }>
 
 export const money = (name: string) => milliunits(name)
 
+/**
+ * A plain integer — counters, sort orders, percentages.
+ *
+ * Needed because `safeIntegers` is a **connection-wide** setting, not a per-column one: turning
+ * it on so money stays exact also makes every other INTEGER arrive as a bigint, while Drizzle's
+ * own `integer()` types it as `number`. The mismatch is invisible until something adds a
+ * literal to one and TypeScript's promise turns into a TypeError at runtime.
+ *
+ * These values are all small and bounded, so narrowing to `number` on read is safe and keeps
+ * the declared type honest.
+ */
+const smallInt = customType<{ data: number; driverData: bigint | number }>({
+  dataType: () => 'integer',
+  fromDriver: (value) => Number(value),
+  toDriver: (value) => value,
+})
+
+export const int = (name: string) => smallInt(name)
+
 /** A calendar date, `YYYY-MM-DD`. Never a timestamp — ADR-0005. */
 export const calendarDate = (name: string) => text(name)
 
@@ -62,7 +81,7 @@ export const ref = (name: string) => text(name)
  */
 export const planScoped = {
   planId: ref('plan_id').notNull(),
-  knowledgeAtChange: integer('knowledge_at_change').notNull().default(0),
+  knowledgeAtChange: int('knowledge_at_change').notNull().default(0),
   deleted: bool('deleted').notNull().default(false),
 }
 

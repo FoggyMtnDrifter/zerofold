@@ -51,6 +51,21 @@ importers:
 
   packages/budget-engine: {}
 
+  packages/commands:
+    dependencies:
+      '@zerofold/db':
+        specifier: workspace:*
+        version: link:../db
+      '@zerofold/shared':
+        specifier: workspace:*
+        version: link:../shared
+      drizzle-orm:
+        specifier: ^0.44.7
+        version: 0.44.7(@types/better-sqlite3@7.6.13)(better-sqlite3@13.0.3)
+      uuidv7:
+        specifier: ^1.0.2
+        version: 1.2.1
+
   packages/db:
     dependencies:
       '@zerofold/shared':

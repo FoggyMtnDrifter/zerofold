@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm'
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
-import { bool, calendarDate, id, json, money, planScoped, ref, timestamps } from './columns.ts'
+import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { bool, calendarDate, id, int, json, money, planScoped, ref, timestamps } from './columns.ts'
 import type { ClearedStatus, DebtTransactionType, FlagColor, Frequency } from './enums.ts'
 
 export const transaction = sqliteTable(
@@ -80,7 +80,7 @@ export const subtransaction = sqliteTable(
     id: id(),
     ...planScoped,
     transactionId: ref('transaction_id').notNull(),
-    sortOrder: integer('sort_order').notNull().default(0),
+    sortOrder: int('sort_order').notNull().default(0),
     amount: money('amount').notNull(),
     memo: text('memo'),
     payeeId: ref('payee_id'),
@@ -123,7 +123,7 @@ export const scheduledTransaction = sqliteTable(
 
     /** Extensions D3 — present in YNAB's UI but absent from its API. */
     endDate: calendarDate('end_date'),
-    endAfterOccurrences: integer('end_after_occurrences'),
+    endAfterOccurrences: int('end_after_occurrences'),
     /**
      * Auto-enter back-fills **every** missed occurrence, not just the latest (R53), so the
      * scheduler must be idempotent across repeated runs and across downtime.
@@ -143,7 +143,7 @@ export const scheduledSubtransaction = sqliteTable('scheduled_subtransaction', {
   id: id(),
   ...planScoped,
   scheduledTransactionId: ref('scheduled_transaction_id').notNull(),
-  sortOrder: integer('sort_order').notNull().default(0),
+  sortOrder: int('sort_order').notNull().default(0),
   amount: money('amount').notNull(),
   memo: text('memo'),
   payeeId: ref('payee_id'),

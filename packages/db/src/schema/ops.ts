@@ -1,6 +1,16 @@
 /** Instance operations: invites, tokens, import, migration, audit. */
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
-import { bool, calendarDate, id, json, planScoped, ref, timestamp, timestamps } from './columns.ts'
+import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import {
+  bool,
+  calendarDate,
+  id,
+  int,
+  json,
+  planScoped,
+  ref,
+  timestamp,
+  timestamps,
+} from './columns.ts'
 
 export const invite = sqliteTable(
   'invite',
@@ -45,7 +55,7 @@ export const importMapping = sqliteTable('import_mapping', {
   dateFormat: text('date_format'),
   amountStyle: text('amount_style').$type<'single' | 'debit_credit' | 'inverted'>().notNull(),
   decimalSeparator: text('decimal_separator'),
-  skipRows: integer('skip_rows').notNull().default(0),
+  skipRows: int('skip_rows').notNull().default(0),
   ...timestamps,
 })
 
@@ -59,9 +69,9 @@ export const importBatch = sqliteTable(
     filename: text('filename'),
     fileHash: text('file_hash'),
     mappingId: ref('mapping_id'),
-    rowCount: integer('row_count').notNull().default(0),
-    matchedCount: integer('matched_count').notNull().default(0),
-    createdCount: integer('created_count').notNull().default(0),
+    rowCount: int('row_count').notNull().default(0),
+    matchedCount: int('matched_count').notNull().default(0),
+    createdCount: int('created_count').notNull().default(0),
     status: text('status').notNull(),
     createdByUserId: ref('created_by_user_id'),
     ...timestamps,
@@ -135,7 +145,7 @@ export const auditEvent = sqliteTable(
 export const backupRecord = sqliteTable('backup_record', {
   id: id(),
   path: text('path').notNull(),
-  sizeBytes: integer('size_bytes').notNull(),
+  sizeBytes: int('size_bytes').notNull(),
   takenAt: timestamp('taken_at').notNull(),
   trigger: text('trigger').$type<'scheduled' | 'manual' | 'pre_migration'>().notNull(),
   forDate: calendarDate('for_date'),

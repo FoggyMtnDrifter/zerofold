@@ -1,0 +1,19 @@
+{
+  "name": "@zerofold/commands",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@zerofold/db": "workspace:*",
+    "@zerofold/shared": "workspace:*",
+    "drizzle-orm": "^0.44.7",
+    "uuidv7": "^1.0.2"
+  }
+}
