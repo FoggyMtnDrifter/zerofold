@@ -1,0 +1,93 @@
+{
+ "st": {
+  "id": "2ebbe188-bab9-43f6-9204-8f389d8781ab",
+  "date_first": "2026-09-15",
+  "date_next": "2026-09-15",
+  "frequency": "never",
+  "amount": 500000,
+  "amount_formatted": "$500.00",
+  "amount_currency": 500,
+  "memo": "P0-04b future income",
+  "flag_color": null,
+  "flag_name": null,
+  "account_id": "6c5c3d38-c505-48c4-b95b-cc4ae790dc4b",
+  "account_name": "Checking",
+  "payee_id": null,
+  "payee_name": null,
+  "category_id": null,
+  "category_name": "Uncategorized",
+  "transfer_account_id": null,
+  "deleted": false,
+  "subtransactions": []
+ },
+ "before": {
+  "AUG": {
+   "RTA": 700000,
+   "income": 1000000,
+   "budgeted": 300000,
+   "activity": -140000,
+   "C1_bal": -40000,
+   "C1_bud": 100000,
+   "C2_bal": 200000,
+   "C2_bud": 200000
+  },
+  "SEP": {
+   "RTA": 660000,
+   "income": 0,
+   "budgeted": 0,
+   "activity": 0,
+   "C1_bal": 0,
+   "C1_bud": 0,
+   "C2_bal": 200000,
+   "C2_bud": 0
+  },
+  "OCT": {
+   "RTA": 660000,
+   "income": 0,
+   "budgeted": 0,
+   "activity": 0,
+   "C1_bal": 0,
+   "C1_bud": 0,
+   "C2_bal": 200000,
+   "C2_bud": 0
+  },
+  "NOV": {
+   "RTA": "—404—"
+  }
+ },
+ "after": {
+  "AUG": {
+   "RTA": 700000,
+   "income": 1000000,
+   "budgeted": 300000,
+   "activity": -140000,
+   "C1_bal": -40000,
+   "C1_bud": 100000,
+   "C2_bal": 200000,
+   "C2_bud": 200000
+  },
+  "SEP": {
+   "RTA": 660000,
+   "income": 0,
+   "budgeted": 0,
+   "activity": 0,
+   "C1_bal": 0,
+   "C1_bud": 0,
+   "C2_bal": 200000,
+   "C2_bud": 0
+  },
+  "OCT": {
+   "RTA": 660000,
+   "income": 0,
+   "budgeted": 0,
+   "activity": 0,
+   "C1_bal": 0,
+   "C1_bud": 0,
+   "C2_bal": 200000,
+   "C2_bud": 0
+  },
+  "NOV": {
+   "RTA": "—404—"
+  }
+ }
+}
