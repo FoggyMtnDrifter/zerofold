@@ -1,0 +1,67 @@
+{
+ "never": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "never"
+ },
+ "daily": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "daily"
+ },
+ "weekly": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "weekly"
+ },
+ "everyOtherWeek": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "everyOtherWeek"
+ },
+ "twiceAMonth": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "twiceAMonth"
+ },
+ "every4Weeks": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "every4Weeks"
+ },
+ "monthly": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "monthly"
+ },
+ "everyOtherMonth": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "everyOtherMonth"
+ },
+ "every3Months": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "every3Months"
+ },
+ "every4Months": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "every4Months"
+ },
+ "twiceAYear": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "twiceAYear"
+ },
+ "yearly": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "yearly"
+ },
+ "everyOtherYear": {
+  "date_first": "2026-08-16",
+  "date_next": "2026-08-16",
+  "frequency": "everyOtherYear"
+ }
+}
