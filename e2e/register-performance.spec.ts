@@ -12,7 +12,12 @@ import { expect, test } from '@playwright/test'
  */
 const BUDGET = {
   interactiveMs: 500,
-  frameMs: 16.7,
+  /** 60Hz vsync. A frame INTERVAL can never be shorter than this. */
+  vsyncMs: 16.7,
+  /** An interval longer than this means at least one frame was missed. */
+  droppedFrameMs: 16.7 * 1.5,
+  /** Tolerated share of dropped frames — GC and the harness itself cost a few. */
+  maxDroppedShare: 0.1,
   domRowCap: 80,
 }
 
@@ -68,21 +73,33 @@ test.describe('register at 50,000 rows', () => {
       return {
         median: frames[Math.floor(frames.length / 2)] as number,
         p95: frames[Math.floor(frames.length * 0.95)] as number,
+        dropped: frames.filter((f) => f > 16.7 * 1.5).length,
+        total: frames.length,
         domRows: document.querySelectorAll('[role="row"][aria-rowindex]').length,
         scrolled: el.scrollTop,
       }
     })
 
-    // eslint-disable-next-line no-console
     console.log(
-      `    frames — median ${result.median.toFixed(1)}ms, p95 ${result.p95.toFixed(1)}ms; ` +
-        `${result.domRows} DOM rows after scrolling to ${result.scrolled}px`,
+      `    frames — median ${result.median.toFixed(1)}ms, p95 ${result.p95.toFixed(1)}ms, ` +
+        `${result.dropped}/${result.total} dropped; ${result.domRows} DOM rows ` +
+        `after scrolling to ${result.scrolled}px`,
     )
 
-    // p95 rather than the worst frame: a single long frame is usually the harness or GC, and a
-    // budget that fails on one outlier is a budget people learn to ignore.
-    expect(result.p95).toBeLessThan(BUDGET.frameMs * 2)
-    expect(result.median).toBeLessThan(BUDGET.frameMs)
+    /**
+     * Measure dropped frames, not raw interval.
+     *
+     * A rAF interval cannot be shorter than the vsync period, so asserting `median < 16.7`
+     * is asking the browser to beat its own refresh rate — it passes only by floating-point
+     * luck and fails the moment the machine is busy. That is a flaky test dressed as a
+     * performance budget. What actually matters is whether frames were *missed*.
+     */
+    expect(
+      result.dropped / result.total,
+      `${result.dropped} of ${result.total} frames exceeded 1.5x vsync`,
+    ).toBeLessThanOrEqual(BUDGET.maxDroppedShare)
+    // The median should sit at vsync, meaning the work fits in a frame with room to spare.
+    expect(result.median).toBeLessThan(BUDGET.droppedFrameMs)
     expect(result.domRows).toBeLessThan(BUDGET.domRowCap)
     expect(result.scrolled).toBeGreaterThan(30_000)
   })
