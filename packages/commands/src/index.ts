@@ -18,3 +18,9 @@ export type { RegistrationDecision } from './plan/registration.ts'
 export { completeRegistration, instanceIsEmpty, mayRegister } from './plan/registration.ts'
 export type { ProcedureInput, ProcedureName, ProcedureOutput } from './procedures.ts'
 export { isProcedureName, procedures, runProcedure } from './procedures.ts'
+export type {
+  CreateTransactionInput,
+  CreateTransactionResult,
+  SubtransactionInput,
+} from './transaction/create-transaction.ts'
+export { createTransaction } from './transaction/create-transaction.ts'
