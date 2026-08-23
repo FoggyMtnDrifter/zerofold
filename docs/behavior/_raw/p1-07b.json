@@ -1,0 +1,10 @@
+{
+ "a": {
+  "income": 1048000,
+  "pay_balance": 0
+ },
+ "b": {
+  "income": 1039000,
+  "pay_balance": -9000
+ }
+}

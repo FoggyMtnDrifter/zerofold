@@ -1,0 +1,28 @@
+{
+ "log": [
+  {
+   "label": "0 baseline: coverage 60000 in payment cat",
+   "income": 1048000,
+   "pay_activity": 60000,
+   "pay_balance": 60000
+  },
+  {
+   "label": "1 paid 20000  (LESS than the 60000 held)",
+   "income": 1048000,
+   "pay_activity": 40000,
+   "pay_balance": 40000
+  },
+  {
+   "label": "2 paid 40000  (EXACTLY the remaining 40000)",
+   "income": 1048000,
+   "pay_activity": 0,
+   "pay_balance": 0
+  },
+  {
+   "label": "3 paid 15000  (MORE — nothing left to draw on)",
+   "income": 1048000,
+   "pay_activity": -15000,
+   "pay_balance": -15000
+  }
+ ]
+}

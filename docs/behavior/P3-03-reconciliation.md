@@ -1,7 +1,7 @@
 # P3-03 — Reconciliation, and an unexpected income interaction
 
-- **Status:** Reconciliation RESOLVED. The income interaction is CONFIRMED but its exact
-  mechanism is inferred from two plans — see the caveat.
+- **Status:** Reconciliation RESOLVED. The income interaction (R60) was **falsified** by
+  [P1-07](P1-07-paying-a-credit-card.md); see R60′ there.
 - **Evidence class:** CONSTRUCTED. **Raw:** `_raw/p3-03.json`. **Units:** milliunits.
 
 ## Setup
@@ -65,7 +65,15 @@ place, for every entry path.
 
 ---
 
-## R60 — ⚠ A card payment beyond the payment category's balance reduces income
+## R60 — ⚠ SUPERSEDED — see [P1-07](P1-07-paying-a-credit-card.md)
+
+> **This rule was FALSIFIED by the designed test it called for.** Income is unaffected when a
+> payment overshoots a *fully covered* card, even though the payment category goes negative.
+> The real rule (**R60′**) is that payments draw from Ready to Assign only to the extent they
+> pay **uncovered** debt — principally a card's opening balance. The analysis below is kept
+> because the reasoning that produced it, and the way it failed, are both instructive.
+
+### The original (incorrect) rule: a card payment beyond the payment category's balance reduces income
 
 Discovered while reconciling the income figure, which did not match the sum of Inflow
 transactions. Two-point confirmation:
