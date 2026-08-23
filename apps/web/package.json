@@ -11,13 +11,15 @@
   },
   "dependencies": {
     "@node-rs/argon2": "^2.1.0",
+    "@zerofold/commands": "workspace:*",
     "@zerofold/db": "workspace:*",
     "@zerofold/shared": "workspace:*",
     "better-auth": "^1.7.1",
+    "drizzle-orm": "^0.44.7",
     "next": "^16.3.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@zerofold/commands": "workspace:*"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
