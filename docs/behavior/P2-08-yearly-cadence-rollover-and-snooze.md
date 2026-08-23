@@ -57,8 +57,9 @@ does not expire or go permanently overdue at its due date — it repeats.** An e
 computed `months_to_budget` as a plain difference to `goal_target_month` would produce zero or
 a negative span for every month after the deadline, and divide by it.
 
-**Open:** whether a *non-repeating* target (Custom cadence with Repeat off) instead goes
-overdue or stops demanding. Not tested — **P2-08b**.
+**Resolved in [P2-09/P2-08b](P2-09-rounding-and-expired-targets.md) (R35):** a *non-repeating*
+target instead goes quiet — `months_to_budget → 0`, `under_funded → 0` — while `overall_left`
+keeps reporting the unmet remainder.
 
 ## P2-08 — Snooze
 

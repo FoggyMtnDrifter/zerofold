@@ -1,0 +1,49 @@
+{
+ "made": {
+  "P-12.5pct": "bb50e0c8-5d63-4b42-ad4a-5a287b8788a2",
+  "P-37.5pct": "836cbece-f2c7-43a5-a82f-643223b97ac9",
+  "P-62.5pct": "02854ae6-4502-4931-baae-2e1936dcce4a"
+ },
+ "rows": {
+  "SEP G-TBD": {
+   "type": "TBD",
+   "target": 600000,
+   "target_month": "2026-09-01",
+   "under_funded": 150000,
+   "months_to_budget": 1,
+   "overall_funded": 450000,
+   "overall_left": 150000,
+   "percentage_complete": 75
+  },
+  "SEP G-TB": {
+   "type": "TB",
+   "target": 500000,
+   "target_month": null,
+   "under_funded": 0,
+   "months_to_budget": 0,
+   "overall_funded": 0,
+   "overall_left": 500000,
+   "percentage_complete": 0
+  },
+  "OCT G-TBD": {
+   "type": "TBD",
+   "target": 600000,
+   "target_month": "2026-09-01",
+   "under_funded": 0,
+   "months_to_budget": 0,
+   "overall_funded": 450000,
+   "overall_left": 150000,
+   "percentage_complete": 75
+  },
+  "OCT G-TB": {
+   "type": "TB",
+   "target": 500000,
+   "target_month": null,
+   "under_funded": 0,
+   "months_to_budget": 0,
+   "overall_funded": 0,
+   "overall_left": 500000,
+   "percentage_complete": 0
+  }
+ }
+}

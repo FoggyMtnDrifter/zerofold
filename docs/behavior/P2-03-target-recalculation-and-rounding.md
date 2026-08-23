@@ -54,9 +54,9 @@ Also consistent with the earlier NEED-dated probe: 120000 due December, viewed f
     overall_left(M)   = goal_target − overall_funded(M)
     percentage_complete(M) = 100 × overall_funded(M) / goal_target
 
-Observed: 200000/600000 → **33**, 450000/600000 → **75**. Both are consistent with floor and
-with round-half-up; **not yet discriminated.** A case landing on exactly x.5 is needed.
-**Open — folded into P2-09.**
+Observed: 200000/600000 → **33**, 450000/600000 → **75**. **Resolved in
+[P2-09](P2-09-rounding-and-expired-targets.md) (R34): it truncates** — three exact `.5` cases
+all floored. Note this rounds the *opposite* way to `under_funded`, which ceils (R28).
 
 ## R28 — `goal_under_funded` is rounded UP to the nearest cent
 
