@@ -38,7 +38,12 @@ export function SignInForm() {
     <main className="grid min-h-dvh place-items-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in to Zerofold</CardTitle>
+          <CardTitle asChild>
+            {/* A real heading: shadcn's CardTitle is a div, and a page whose entire
+                content is one card would otherwise have no heading at all for a
+                screen reader to navigate by. */}
+            <h1>Sign in to Zerofold</h1>
+          </CardTitle>
           <CardDescription>Your budget, on your own hardware.</CardDescription>
         </CardHeader>
         <CardContent>

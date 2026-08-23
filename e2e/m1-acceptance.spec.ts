@@ -217,13 +217,37 @@ test.describe
       expect(await response.json()).toMatchObject({ error: { code: 'account.balance_not_zero' } })
     })
 
-    test('the shell renders, in both themes', async ({ page }) => {
+    test('an unauthenticated visitor is sent to sign in', async ({ page }) => {
+      // The browser context carries no session, unlike the `api` context above.
       await page.goto('/')
-      await expect(page.getByRole('heading', { name: 'August 2026' })).toBeVisible()
-      // The register grid is a real table, so it is navigable and announceable.
-      await expect(page.getByRole('columnheader', { name: 'Available' })).toBeVisible()
+      await expect(page).toHaveURL(/\/sign-in$/)
+      await expect(page.getByRole('heading', { name: 'Sign in to Zerofold' })).toBeVisible()
+    })
+
+    test('signing in through the UI reaches the plan, in both themes', async ({ page }) => {
+      await page.goto('/sign-in')
+      await page.getByLabel('Email').fill('owner@example.test')
+      await page.getByLabel('Password').fill(PASSWORD)
+      await page.getByRole('button', { name: 'Sign in' }).click()
+
+      // Lands on the plan created by the API earlier in this sequence.
+      await expect(page.getByRole('heading', { name: 'Plan' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'All Accounts' })).toBeVisible()
 
       await page.emulateMedia({ colorScheme: 'dark' })
-      await expect(page.getByRole('heading', { name: 'August 2026' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Plan' })).toBeVisible()
+    })
+
+    test('a wrong password does not reveal whether the account exists', async ({ page }) => {
+      // The same message for a bad password and an unknown address; otherwise anyone could
+      // test whether a given person has an account on this instance.
+      const messageFor = async (email: string) => {
+        await page.goto('/sign-in')
+        await page.getByLabel('Email').fill(email)
+        await page.getByLabel('Password').fill('not-the-password')
+        await page.getByRole('button', { name: 'Sign in' }).click()
+        return page.getByRole('alert').textContent()
+      }
+      expect(await messageFor('owner@example.test')).toBe(await messageFor('nobody@example.test'))
     })
   })

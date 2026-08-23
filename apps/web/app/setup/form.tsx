@@ -37,7 +37,12 @@ export function SetupForm() {
     <main className="grid min-h-dvh place-items-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Set up this instance</CardTitle>
+          <CardTitle asChild>
+            {/* A real heading: shadcn's CardTitle is a div, and a page whose entire
+                content is one card would otherwise have no heading at all for a
+                screen reader to navigate by. */}
+            <h1>Set up this instance</h1>
+          </CardTitle>
           <CardDescription>
             This is the first account, so it becomes the administrator. Afterwards, registration is
             by invitation only.

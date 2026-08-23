@@ -43,7 +43,12 @@ export function NewPlanForm() {
     <main className="grid min-h-dvh place-items-center p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create your first plan</CardTitle>
+          <CardTitle asChild>
+            {/* A real heading: shadcn's CardTitle is a div, and a page whose entire
+                content is one card would otherwise have no heading at all for a
+                screen reader to navigate by. */}
+            <h1>Create your first plan</h1>
+          </CardTitle>
           <CardDescription>
             A plan is one budget — its accounts, categories and history.
           </CardDescription>

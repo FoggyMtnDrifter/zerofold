@@ -1,3 +1,4 @@
+import { Slot as SlotPrimitive } from 'radix-ui'
 import type * as React from 'react'
 
 import { cn } from '@/lib/utils'
@@ -28,9 +29,16 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+function CardTitle({
+  className,
+  asChild,
+  ...props
+}: React.ComponentProps<'div'> & { asChild?: boolean }) {
+  // `asChild` so a card that IS the page can supply a real heading element. Upstream renders a
+  // div, which is right for a card among many and wrong for a card that is the whole page.
+  const Comp = asChild ? SlotPrimitive.Root : 'div'
   return (
-    <div
+    <Comp
       data-slot="card-title"
       className={cn('leading-none font-semibold', className)}
       {...props}
