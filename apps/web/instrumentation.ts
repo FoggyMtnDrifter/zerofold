@@ -11,18 +11,20 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
-  const [{ migrate, migrationsFolder }, { client }] = await Promise.all([
+  const [{ migrate }, { client }, { resolveMigrationsDir }] = await Promise.all([
     import('@zerofold/db'),
     import('./lib/db.ts'),
+    import('./lib/migrations-path.ts'),
   ])
 
-  const folder = process.env.ZEROFOLD_MIGRATIONS_DIR ?? migrationsFolder()
+  const folder = resolveMigrationsDir()
   const startedAt = performance.now()
   migrate(client.db, folder)
   console.log(
     JSON.stringify({
       level: 'info',
       msg: 'migrations applied',
+      folder,
       durationMs: Math.round(performance.now() - startedAt),
     }),
   )

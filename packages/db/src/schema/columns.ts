@@ -45,6 +45,23 @@ const smallInt = customType<{ data: number; driverData: bigint | number }>({
 
 export const int = (name: string) => smallInt(name)
 
+/**
+ * An instant, stored as epoch milliseconds. Used only by the Better Auth tables, which bind
+ * and read `Date` objects.
+ *
+ * Custom for the same reason as {@link int}: Drizzle's own `integer({ mode: 'timestamp' })`
+ * multiplies the driver value, and under connection-wide `safeIntegers` that value is a bigint,
+ * so it throws "Cannot mix BigInt and other types". Every integer-backed column in this schema
+ * therefore goes through a custom type — there is no such thing as a plain `integer()` here.
+ */
+const epochMillis = customType<{ data: Date; driverData: bigint | number }>({
+  dataType: () => 'integer',
+  fromDriver: (value) => new Date(Number(value)),
+  toDriver: (value) => value.getTime(),
+})
+
+export const authTime = (name: string) => epochMillis(name)
+
 /** A calendar date, `YYYY-MM-DD`. Never a timestamp — ADR-0005. */
 export const calendarDate = (name: string) => text(name)
 

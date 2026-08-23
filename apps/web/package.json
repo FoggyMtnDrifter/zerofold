@@ -5,16 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/copy-migrations.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.1.0",
     "@zerofold/db": "workspace:*",
     "@zerofold/shared": "workspace:*",
+    "better-auth": "^1.7.1",
     "next": "^16.3.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "@zerofold/commands": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",

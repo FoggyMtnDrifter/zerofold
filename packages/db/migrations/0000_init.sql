@@ -6,10 +6,13 @@ CREATE TABLE `auth_account` (
 	`password` text,
 	`access_token` text,
 	`refresh_token` text,
-	`access_token_expires_at` text,
+	`id_token` text,
+	`issuer` text,
+	`access_token_expires_at` integer,
+	`refresh_token_expires_at` integer,
 	`scope` text,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL,
-	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `auth_account_provider` ON `auth_account` (`provider_id`,`account_id`);--> statement-breakpoint
@@ -19,12 +22,12 @@ CREATE TABLE `auth_passkey` (
 	`name` text,
 	`public_key` text NOT NULL,
 	`credential_id` text NOT NULL,
-	`counter` text NOT NULL,
+	`counter` integer DEFAULT 0 NOT NULL,
 	`device_type` text,
 	`backed_up` integer DEFAULT false NOT NULL,
 	`transports` text,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL,
-	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `auth_passkey_credential` ON `auth_passkey` (`credential_id`);--> statement-breakpoint
@@ -32,11 +35,11 @@ CREATE TABLE `auth_session` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`token` text NOT NULL,
-	`expires_at` text NOT NULL,
+	`expires_at` integer NOT NULL,
 	`ip_address` text,
 	`user_agent` text,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL,
-	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `auth_session_token` ON `auth_session` (`token`);--> statement-breakpoint
@@ -48,8 +51,8 @@ CREATE TABLE `auth_user` (
 	`email_verified` integer DEFAULT false NOT NULL,
 	`image` text,
 	`is_admin` integer DEFAULT false NOT NULL,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL,
-	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `auth_user_email` ON `auth_user` (`email`);--> statement-breakpoint
@@ -57,9 +60,9 @@ CREATE TABLE `auth_verification` (
 	`id` text PRIMARY KEY NOT NULL,
 	`identifier` text NOT NULL,
 	`value` text NOT NULL,
-	`expires_at` text NOT NULL,
-	`created_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL,
-	`updated_at` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')) NOT NULL
+	`expires_at` integer NOT NULL,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX `auth_verification_identifier` ON `auth_verification` (`identifier`);--> statement-breakpoint
