@@ -1,0 +1,87 @@
+{
+ "grp": "22ba4910-70b3-4268-9557-0ebb89706a0a",
+ "made": {
+  "T-target-only": "0339277b-682c-42f8-abec-03d00c191845",
+  "T-target-whole-true": "92f33df7-b3e1-46af-9cb0-c7a0b757d686",
+  "T-target-whole-false": "0903f056-f337-474b-a461-9b06bdc0a10e",
+  "T-target-date": "3d087751-2d50-4646-b913-36a5efdd7e89",
+  "T-date-whole-true": "540233b6-e047-4497-8e29-66268533259a"
+ },
+ "rows": {
+  "T-target-only": {
+   "type": "NEED",
+   "needs_whole_amount": true,
+   "day": null,
+   "cadence": 1,
+   "cadence_frequency": 1,
+   "target": 100000,
+   "target_month": null,
+   "creation_month": "2026-08-01",
+   "under_funded": 100000,
+   "percentage_complete": 0,
+   "months_to_budget": 1,
+   "overall_funded": 0,
+   "overall_left": 100000
+  },
+  "T-target-whole-true": {
+   "type": "NEED",
+   "needs_whole_amount": true,
+   "day": null,
+   "cadence": 1,
+   "cadence_frequency": 1,
+   "target": 100000,
+   "target_month": null,
+   "creation_month": "2026-08-01",
+   "under_funded": 100000,
+   "percentage_complete": 0,
+   "months_to_budget": 1,
+   "overall_funded": 0,
+   "overall_left": 100000
+  },
+  "T-target-whole-false": {
+   "type": "NEED",
+   "needs_whole_amount": false,
+   "day": null,
+   "cadence": 1,
+   "cadence_frequency": 1,
+   "target": 100000,
+   "target_month": null,
+   "creation_month": "2026-08-01",
+   "under_funded": 100000,
+   "percentage_complete": 0,
+   "months_to_budget": 1,
+   "overall_funded": 0,
+   "overall_left": 100000
+  },
+  "T-target-date": {
+   "type": "NEED",
+   "needs_whole_amount": true,
+   "day": null,
+   "cadence": 1,
+   "cadence_frequency": 1,
+   "target": 120000,
+   "target_month": "2026-12-01",
+   "creation_month": "2026-08-01",
+   "under_funded": 24000,
+   "percentage_complete": 0,
+   "months_to_budget": 5,
+   "overall_funded": 0,
+   "overall_left": 120000
+  },
+  "T-date-whole-true": {
+   "type": "NEED",
+   "needs_whole_amount": true,
+   "day": null,
+   "cadence": 1,
+   "cadence_frequency": 1,
+   "target": 120000,
+   "target_month": "2026-12-01",
+   "creation_month": "2026-08-01",
+   "under_funded": 24000,
+   "percentage_complete": 0,
+   "months_to_budget": 5,
+   "overall_funded": 0,
+   "overall_left": 120000
+  }
+ }
+}

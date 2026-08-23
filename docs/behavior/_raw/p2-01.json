@@ -1,0 +1,54 @@
+{
+ "TRUE": "92f33df7-b3e1-46af-9cb0-c7a0b757d686",
+ "FALSE": "0903f056-f337-474b-a461-9b06bdc0a10e",
+ "final": {
+  "AUG whole=TRUE": {
+   "whole": true,
+   "budgeted": 100000,
+   "activity": -60000,
+   "balance": 40000,
+   "target": 100000,
+   "under_funded": 0,
+   "percentage_complete": 100,
+   "months_to_budget": 1,
+   "overall_funded": 100000,
+   "overall_left": 0
+  },
+  "AUG whole=FALSE": {
+   "whole": false,
+   "budgeted": 100000,
+   "activity": -60000,
+   "balance": 40000,
+   "target": 100000,
+   "under_funded": 0,
+   "percentage_complete": 100,
+   "months_to_budget": 1,
+   "overall_funded": 100000,
+   "overall_left": 0
+  },
+  "SEP whole=TRUE": {
+   "whole": true,
+   "budgeted": 0,
+   "activity": 0,
+   "balance": 40000,
+   "target": 100000,
+   "under_funded": 100000,
+   "percentage_complete": 0,
+   "months_to_budget": 1,
+   "overall_funded": 0,
+   "overall_left": 100000
+  },
+  "SEP whole=FALSE": {
+   "whole": false,
+   "budgeted": 0,
+   "activity": 0,
+   "balance": 40000,
+   "target": 100000,
+   "under_funded": 60000,
+   "percentage_complete": 40,
+   "months_to_budget": 1,
+   "overall_funded": 40000,
+   "overall_left": 60000
+  }
+ }
+}
