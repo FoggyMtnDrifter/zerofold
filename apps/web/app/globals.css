@@ -1,0 +1,315 @@
+@import "tailwindcss";
+
+/*
+ * Zerofold's visual identity.
+ *
+ * The reference points are a well-made spreadsheet and a good code editor, not a consumer
+ * finance app: a calm warm-neutral canvas, hairline rules instead of card borders wherever
+ * data is dense, and a single restrained accent used only for interactive affordances.
+ *
+ * The governing rule is that COLOUR IS RESERVED FOR MEANING. Positive, negative, underfunded,
+ * overspent, cleared, uncleared, reconciled and the six flag colours are the only saturated
+ * hues on screen, so a green number means the same thing everywhere and the eye learns the
+ * grid in a day. Nothing decorative may use them.
+ *
+ * Everything is OKLCH: it interpolates perceptually, so a light and dark pair derived from the
+ * same hue keep their relationship instead of one going muddy.
+ */
+
+@theme {
+  /* ── type ─────────────────────────────────────────────────────────────────────────── */
+  --font-sans: "InterVariable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* A tight scale. A budgeting app is mostly one text size and one number size; the rest
+     exists for headings that appear once per screen. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.375rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: 2rem;
+
+  /* ── spacing rhythm ───────────────────────────────────────────────────────────────── */
+  /* 4px base. Register rows are 32px — dense enough to see a month at a glance, tall enough
+     to hit with a mouse. */
+  --spacing: 0.25rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+}
+
+/*
+ * Semantic tokens.
+ *
+ * Components reference these, never a raw colour. Every one is defined in the bare `:root`
+ * block first so a value always exists, then overridden for dark — a token whose only
+ * definition lives inside a media query is a token that disappears in the other theme.
+ */
+:root {
+  --canvas: oklch(0.985 0.003 85);
+  --surface: oklch(1 0 0);
+  --surface-sunken: oklch(0.97 0.004 85);
+  --hairline: oklch(0.905 0.005 85);
+  --hairline-strong: oklch(0.84 0.006 85);
+
+  --ink: oklch(0.24 0.012 275);
+  --ink-muted: oklch(0.48 0.012 275);
+  --ink-subtle: oklch(0.62 0.01 275);
+
+  /* The single brand accent. Interactive affordances only — never a data state. */
+  --brand: oklch(0.48 0.13 268);
+  --brand-hover: oklch(0.42 0.14 268);
+  --brand-contrast: oklch(0.99 0 0);
+  --brand-wash: oklch(0.95 0.03 268);
+
+  /* ── money states ─────────────────────────────────────────────────────────────────── */
+  --positive: oklch(0.52 0.13 150);
+  --positive-wash: oklch(0.94 0.05 150);
+  --negative: oklch(0.53 0.19 25);
+  --negative-wash: oklch(0.94 0.05 25);
+  --underfunded: oklch(0.62 0.14 75);
+  --underfunded-wash: oklch(0.95 0.06 85);
+  --neutral-money: oklch(0.62 0.01 275);
+  --neutral-money-wash: oklch(0.95 0.004 275);
+
+  /* ── cleared states ───────────────────────────────────────────────────────────────── */
+  --cleared: oklch(0.52 0.13 150);
+  --uncleared: oklch(0.62 0.01 275);
+  --reconciled: oklch(0.48 0.13 268);
+
+  /* ── the six flags ────────────────────────────────────────────────────────────────── */
+  --flag-red: oklch(0.58 0.2 25);
+  --flag-orange: oklch(0.68 0.16 55);
+  --flag-yellow: oklch(0.79 0.15 90);
+  --flag-green: oklch(0.62 0.15 150);
+  --flag-blue: oklch(0.58 0.14 250);
+  --flag-purple: oklch(0.52 0.16 305);
+
+  --focus-ring: oklch(0.55 0.16 268);
+}
+
+/*
+ * Dark is a true dark, not an inverted grey. The three-state contract from the artifact rules
+ * applies here too: an explicit choice stamps data-theme, and the default "system" setting
+ * stamps nothing, so both selectors are needed.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --canvas: oklch(0.17 0.008 275);
+    --surface: oklch(0.205 0.009 275);
+    --surface-sunken: oklch(0.15 0.008 275);
+    --hairline: oklch(0.28 0.01 275);
+    --hairline-strong: oklch(0.36 0.012 275);
+
+    --ink: oklch(0.95 0.006 85);
+    --ink-muted: oklch(0.72 0.01 275);
+    --ink-subtle: oklch(0.56 0.012 275);
+
+    --brand: oklch(0.72 0.13 268);
+    --brand-hover: oklch(0.79 0.12 268);
+    --brand-contrast: oklch(0.17 0.008 275);
+    --brand-wash: oklch(0.28 0.05 268);
+
+    --positive: oklch(0.75 0.15 150);
+    --positive-wash: oklch(0.28 0.05 150);
+    --negative: oklch(0.7 0.17 25);
+    --negative-wash: oklch(0.29 0.06 25);
+    --underfunded: oklch(0.79 0.14 85);
+    --underfunded-wash: oklch(0.3 0.06 85);
+    --neutral-money: oklch(0.6 0.012 275);
+    --neutral-money-wash: oklch(0.26 0.008 275);
+
+    --cleared: oklch(0.75 0.15 150);
+    --uncleared: oklch(0.6 0.012 275);
+    --reconciled: oklch(0.72 0.13 268);
+
+    --flag-red: oklch(0.68 0.19 25);
+    --flag-orange: oklch(0.76 0.15 55);
+    --flag-yellow: oklch(0.85 0.14 90);
+    --flag-green: oklch(0.74 0.14 150);
+    --flag-blue: oklch(0.7 0.13 250);
+    --flag-purple: oklch(0.66 0.15 305);
+
+    --focus-ring: oklch(0.72 0.13 268);
+  }
+}
+
+:root[data-theme="dark"] {
+  --canvas: oklch(0.17 0.008 275);
+  --surface: oklch(0.205 0.009 275);
+  --surface-sunken: oklch(0.15 0.008 275);
+  --hairline: oklch(0.28 0.01 275);
+  --hairline-strong: oklch(0.36 0.012 275);
+  --ink: oklch(0.95 0.006 85);
+  --ink-muted: oklch(0.72 0.01 275);
+  --ink-subtle: oklch(0.56 0.012 275);
+  --brand: oklch(0.72 0.13 268);
+  --brand-hover: oklch(0.79 0.12 268);
+  --brand-contrast: oklch(0.17 0.008 275);
+  --brand-wash: oklch(0.28 0.05 268);
+  --positive: oklch(0.75 0.15 150);
+  --positive-wash: oklch(0.28 0.05 150);
+  --negative: oklch(0.7 0.17 25);
+  --negative-wash: oklch(0.29 0.06 25);
+  --underfunded: oklch(0.79 0.14 85);
+  --underfunded-wash: oklch(0.3 0.06 85);
+  --neutral-money: oklch(0.6 0.012 275);
+  --neutral-money-wash: oklch(0.26 0.008 275);
+  --cleared: oklch(0.75 0.15 150);
+  --uncleared: oklch(0.6 0.012 275);
+  --reconciled: oklch(0.72 0.13 268);
+  --flag-red: oklch(0.68 0.19 25);
+  --flag-orange: oklch(0.76 0.15 55);
+  --flag-yellow: oklch(0.85 0.14 90);
+  --flag-green: oklch(0.74 0.14 150);
+  --flag-blue: oklch(0.7 0.13 250);
+  --flag-purple: oklch(0.66 0.15 305);
+  --focus-ring: oklch(0.72 0.13 268);
+}
+
+/* Expose the semantic tokens to Tailwind so `text-positive` and `bg-surface` work. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-brand-wash: var(--brand-wash);
+  --color-positive: var(--positive);
+  --color-positive-wash: var(--positive-wash);
+  --color-negative: var(--negative);
+  --color-negative-wash: var(--negative-wash);
+  --color-underfunded: var(--underfunded);
+  --color-underfunded-wash: var(--underfunded-wash);
+  --color-neutral-money: var(--neutral-money);
+  --color-neutral-money-wash: var(--neutral-money-wash);
+  --color-cleared: var(--cleared);
+  --color-uncleared: var(--uncleared);
+  --color-reconciled: var(--reconciled);
+  --color-flag-red: var(--flag-red);
+  --color-flag-orange: var(--flag-orange);
+  --color-flag-yellow: var(--flag-yellow);
+  --color-flag-green: var(--flag-green);
+  --color-flag-blue: var(--flag-blue);
+  --color-flag-purple: var(--flag-purple);
+}
+
+/*
+ * shadcn/ui's token contract, expressed in terms of the palette above.
+ *
+ * §7 requires the UI be assembled from shadcn components. Those components reference their own
+ * variable names, so rather than fork them — which would mean re-forking on every upstream
+ * change — the contract is satisfied here. shadcn components then inherit our identity
+ * automatically, and `npx shadcn add` keeps working unmodified.
+ *
+ * Note shadcn's `--accent` is a subtle hover wash, not a brand colour; ours is `--brand`.
+ */
+@layer base {
+  :root {
+    --background: var(--canvas);
+    --foreground: var(--ink);
+    --card: var(--surface);
+    --card-foreground: var(--ink);
+    --popover: var(--surface);
+    --popover-foreground: var(--ink);
+    --primary: var(--brand);
+    --primary-foreground: var(--brand-contrast);
+    --secondary: var(--surface-sunken);
+    --secondary-foreground: var(--ink);
+    --muted: var(--surface-sunken);
+    --muted-foreground: var(--ink-muted);
+    --accent: var(--surface-sunken);
+    --accent-foreground: var(--ink);
+    --destructive: var(--negative);
+    --destructive-foreground: var(--accent-contrast, oklch(0.99 0 0));
+    --border: var(--hairline);
+    --input: var(--hairline-strong);
+    --ring: var(--focus-ring);
+    --radius: var(--radius-md);
+
+    --sidebar: var(--surface-sunken);
+    --sidebar-foreground: var(--ink);
+    --sidebar-primary: var(--brand);
+    --sidebar-primary-foreground: var(--brand-contrast);
+    --sidebar-accent: var(--surface);
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--hairline);
+    --sidebar-ring: var(--focus-ring);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--hairline);
+  }
+
+  body {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * Amounts align in columns at any weight. Without this, a column of figures visibly
+   * ripples as digit widths change — which is exactly the sort of small wrongness that makes
+   * a financial table feel untrustworthy.
+   */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}

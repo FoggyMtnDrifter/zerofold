@@ -139,7 +139,9 @@ export function createPlan(ctx: CommandContext, input: CreatePlanInput): CreateP
 
     STARTER_GROUPS.forEach(([groupName, categories], groupIndex) => {
       const groupId = group(groupName, null, groupIndex)
-      categories.forEach((name, i) => category(groupId, name, null, i))
+      categories.forEach((name, i) => {
+        category(groupId, name, null, i)
+      })
     })
 
     return { planId, inflowCategoryId, uncategorizedCategoryId, creditCardPaymentsGroupId }
