@@ -1,0 +1,28 @@
+{
+ "AUG": {
+  "type": "NEED",
+  "whole": true,
+  "day": 1,
+  "cadence": 2,
+  "cad_freq": 1,
+  "target": 25000,
+  "target_month": null,
+  "under_funded": 50000,
+  "months_to_budget": 1,
+  "overall_funded": 0,
+  "overall_left": 50000
+ },
+ "SEP": {
+  "type": "NEED",
+  "whole": true,
+  "day": 1,
+  "cadence": 2,
+  "cad_freq": 1,
+  "target": 25000,
+  "target_month": null,
+  "under_funded": 100000,
+  "months_to_budget": 1,
+  "overall_funded": 0,
+  "overall_left": 100000
+ }
+}
