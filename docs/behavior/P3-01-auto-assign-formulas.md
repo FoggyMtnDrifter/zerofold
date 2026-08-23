@@ -39,12 +39,18 @@ verifying calculation behind it. The second round would have "corrected" it to 6
 cleanly. **Neither was right.** A formula's *window* cannot be measured with less history than
 the window itself.
 
-## R42 — The averaging formula
+## R42 — The averaging formula (corrected by P3-01b)
 
-    window            = the 12 calendar months preceding the viewed month, [M−12 … M−1]
-    n                 = count of months *within that window* that have data for the category
+    window   = the 12 calendar months preceding the viewed month, [M−12 … M−1]
+    first    = the earliest month *within the window* that has data for the category
+    n        = inclusive month span from `first` through M−1 — **empty months included**
+
     averageAssigned(M) = Σ budgeted(window)  / n
     averageSpent(M)    = Σ −activity(window) / n
+
+> ⚠ The divisor is a **span**, not a count. An earlier draft of this rule said "count of months
+> with data", which happened to agree on every observation available at the time because none
+> of them had a gap. See the correction below.
 
 Verification on the final state (viewed month = 2026-08):
 
@@ -57,12 +63,28 @@ Verification on the final state (viewed month = 2026-08):
 
 Both averages use the same window and the same divisor.
 
-### Residual ambiguity
+### The gap case, measured (P3-01b)
 
-"Months with data inside the window" and "months from the category's first in-window month
-through M−1" both yield 7 here. They diverge only for a category with a **gap** in its history
-— funded in January, nothing in February, funded again in March. **Follow-up P3-01b:** leave a
-deliberate hole and see whether the divisor counts it.
+A category funded in **January and March only**, read from August 2026. The window is
+Aug 2025 … Jul 2026, so the first in-window month with data is January.
+
+| candidate divisor | value | predicted Average Assigned | predicted Average Spent |
+|-------------------|-------|---------------------------|------------------------|
+| count of months with data | 2 | $400.00 | $40.00 |
+| Jan–Mar inclusive | 3 | $266.67 | $26.67 |
+| **span Jan → Jul** | **7** | **$114.29** | **$11.43** |
+
+Observed: **Average Assigned $114.29, Average Spent $11.43.**
+
+**The divisor counts the empty months.** February contributed nothing to the numerator and
+still lengthened the denominator, which is the behaviour that makes the average mean "what you
+have typically assigned per month since you started using this category" rather than "the
+average of the months you happened to use it".
+
+Had this been implemented from the earlier reading, a category funded twice in seven months
+would have reported an average **3.5× too high** — and the error grows with the size of the
+gap, which is to say it is worst exactly for the sporadic categories where the figure is most
+likely to be consulted.
 
 ## R43 — "Last Month" actions read the immediately preceding month only
 
