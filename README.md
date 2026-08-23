@@ -6,8 +6,26 @@ Zerofold implements the zero-based budgeting method — every unit of currency y
 assigned a job before you spend it — with the depth that method actually requires:
 credit-card payment categories, reconciliation, targets, scheduled transactions, and reports.
 
-> **Status: pre-alpha.** Nothing is installable yet. The behavioural specification is complete
-> enough to build against; the application is not built. See [docs/behavior](docs/behavior/).
+> **Status: pre-alpha.** The container builds and runs, but there is no budgeting in it yet —
+> no auth, no accounts, no register. The behavioural specification is complete enough to build
+> against; see [docs/behavior](docs/behavior/).
+
+## Quickstart
+
+```
+git clone https://github.com/zerofold/zerofold && cd zerofold
+docker compose -f docker/compose.yml up -d --build
+open http://localhost:3000
+```
+
+That is the whole installation. One container, one volume, no database service to configure and
+no cloud account. Your data is a single SQLite file inside the volume, and
+`docker compose exec zerofold` … `backup` copies it out with `VACUUM INTO` while the app keeps
+running.
+
+**Do not put the data directory on an NFS or SMB share.** SQLite's locking is unreliable over
+network filesystems and the database can be corrupted. Zerofold warns at startup if it detects
+one, but it cannot refuse to start. Use local storage.
 
 ## Why another budgeting app
 

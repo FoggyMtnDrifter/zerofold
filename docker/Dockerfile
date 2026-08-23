@@ -33,6 +33,10 @@ FROM deps AS build
 WORKDIR /app
 COPY . .
 RUN pnpm --filter @zerofold/web build
+# A skeleton data directory. distroless has no shell, so it cannot `RUN mkdir` — the directory
+# must arrive as a COPY with the right ownership, otherwise /data is root-owned and the
+# non-root user cannot write the session secret or the database.
+RUN mkdir -p /skel/data
 
 # ── runtime ──────────────────────────────────────────────────────────────────────────
 FROM gcr.io/distroless/nodejs${NODE_VERSION}-debian12 AS runtime
@@ -40,6 +44,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
     ZEROFOLD_DATA_DIR=/data \
+    ZEROFOLD_MIGRATIONS_DIR=/app/migrations \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 
@@ -50,6 +55,9 @@ COPY --from=build --chown=nonroot:nonroot /app/apps/web/public ./apps/web/public
 # SQL migrations are data, not code, so they are not part of the server bundle.
 COPY --from=build --chown=nonroot:nonroot /app/packages/db/migrations ./migrations
 COPY --from=build --chown=nonroot:nonroot /app/docker/entrypoint.mjs ./entrypoint.mjs
+# Ships an empty, correctly-owned /data. A named volume mounted here inherits this ownership
+# on first use, so `docker run -v zerofold-data:/data` works with no host-side chown.
+COPY --from=build --chown=nonroot:nonroot /skel/data /data
 
 USER nonroot
 VOLUME ["/data"]

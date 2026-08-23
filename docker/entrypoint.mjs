@@ -3,12 +3,14 @@
  * Container entrypoint.
  *
  * The runtime image is distroless and has no shell, so this is a Node script rather than the
- * usual bash. It does three things before handing over to the server, all of them idempotent
- * so an unconditional run on every start is safe:
+ * usual bash. It prepares the environment and hands over to the server:
  *
- *   1. ensure the data directory exists
+ *   1. ensure the data directory exists and warn if it looks like a network mount
  *   2. generate and persist a session secret if one was not supplied
- *   3. apply pending migrations
+ *
+ * Migrations deliberately do **not** run here. This file executes outside the Next bundle and
+ * cannot resolve workspace packages; they run in `apps/web/instrumentation.ts` instead, which
+ * also makes `next dev` and the container behave identically.
  */
 import { randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, statfsSync, writeFileSync } from 'node:fs'
@@ -50,12 +52,5 @@ if (!process.env.ZEROFOLD_SECRET) {
   }
   process.env.ZEROFOLD_SECRET = readFileSync(secretFile, 'utf8').trim()
 }
-
-// ── migrations ───────────────────────────────────────────────────────────────────────
-const { createClient, migrate } = await import('@zerofold/db')
-const { db, close } = createClient({ file: join(dataDir, 'zerofold.sqlite') })
-migrate(db, process.env.ZEROFOLD_MIGRATIONS_DIR ?? '/app/migrations')
-close()
-console.log(JSON.stringify({ level: 'info', msg: 'migrations applied' }))
 
 await import('/app/apps/web/server.js')
