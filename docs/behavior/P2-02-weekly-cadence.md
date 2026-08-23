@@ -86,6 +86,5 @@ Required changes:
 
 ## Open
 
-- **Yearly cadence** (`goal_cadence` value) is still unobserved — presumably `13`, matching
-  YNAB's documented encoding, but unverified. Folded into **P2-03b**.
+- ~~Yearly cadence encoding.~~ **Resolved in [P2-08](P2-08-yearly-cadence-rollover-and-snooze.md): `goal_cadence = 13`.**
 - Whether the "Every N weeks" custom cadence uses `goal_cadence_frequency > 1` is untested.

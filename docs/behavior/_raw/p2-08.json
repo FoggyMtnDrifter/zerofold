@@ -1,0 +1,35 @@
+{
+ "AUG": {
+  "type": "NEED",
+  "cadence": 13,
+  "target": 25000,
+  "target_month": "2026-09-01",
+  "under_funded": 12500,
+  "months_to_budget": 2,
+  "overall_funded": 0,
+  "overall_left": 25000,
+  "snoozed_at": "2026-08-23T03:22:57.841Z"
+ },
+ "SEP": {
+  "type": "NEED",
+  "cadence": 13,
+  "target": 25000,
+  "target_month": "2026-09-01",
+  "under_funded": 25000,
+  "months_to_budget": 1,
+  "overall_funded": 0,
+  "overall_left": 25000,
+  "snoozed_at": null
+ },
+ "OCT": {
+  "type": "NEED",
+  "cadence": 13,
+  "target": 25000,
+  "target_month": "2026-09-01",
+  "under_funded": 2090,
+  "months_to_budget": 12,
+  "overall_funded": 0,
+  "overall_left": 25000,
+  "snoozed_at": null
+ }
+}
