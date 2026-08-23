@@ -67,17 +67,50 @@ Months before any spending report **0**, not null — `null` appears only when t
 floor is unmet (as in `zf-exp-p0`, which has ample transactions but no positive income left to
 match).
 
-### Not yet discriminated
+### R67 — AoM rounds half-up (P3-02b)
 
-`413 / 10 = 41.3`, which both floors and rounds to 41. Whether AoM floors or rounds is
-**undetermined**; a case landing on `.5` or above is needed. **Follow-up P3-02b.** Low stakes —
-a one-day difference in a single display figure.
+A third income bucket and a thirteenth spend were added so the last-ten mean lands on exactly
+**36.5**, which floors to 36 and rounds-half-up to 37.
 
-## Open — cash vs credit
+    FIFO ages: 70 71 72 73 30 31 32 33 34 35 36 37 24
+    last ten : 73 30 31 32 33 34 35 36 37 24  → sum 365 → mean 36.5
+    observed : 37
 
-The project plan §4 also asks how AoM treats credit spending. Every spend here was from a cash
-account. Whether a credit-card purchase enters the "last 10" window at its purchase date, at
-the date the card is paid, or not at all, is untested. **Follow-up P3-02c.**
+**Round-half-up.** Note this is a *third* rounding rule, distinct from both of the target ones:
+
+    goal_under_funded        → ceil to the cent      (R28)
+    goal_percentage_complete → floor to a percent    (R34)
+    age_of_money             → round half up to a day (R67)
+
+There is no single rounding helper that satisfies all three, and reaching for one would be
+wrong on two of them.
+
+## R68 — Credit *purchases* do not count; card *payments* do (P3-02c)
+
+Three categorised purchases were added on a credit card, then three payments to that card.
+
+| action | `age_of_money` |
+|--------|----------------|
+| baseline | 37 |
+| + 3 credit-card **purchases** | **37 — unchanged** |
+| + 3 **payments** to that card | **23** |
+
+A credit purchase does not move money, so it is not spending; it creates debt. The money leaves
+when the card is paid, and that is the event Age of Money counts.
+
+This is coherent with the metric's own definition — *"how long money sits in your account(s)
+between earning and spending it"* — and with [R60′](P1-07-paying-a-credit-card.md), where paying
+uncovered debt is what draws on Ready to Assign. Both rules treat the payment, not the purchase,
+as the moment money actually leaves.
+
+### Open — an exhausted FIFO queue
+
+At the point the payments were made, cumulative spending already equalled cumulative income, so
+the three payments had no income left to match against, and the resulting figure implies they
+were assigned an age near **zero**. Whether unmatched spending takes age 0, is skipped, or
+consumes some other bucket is **not determined** — the experiment was not built to separate
+those. **Follow-up P3-02d**, and it matters: a plan that has spent more than it has earned is
+not an unusual state.
 
 ## Engine consequences
 
