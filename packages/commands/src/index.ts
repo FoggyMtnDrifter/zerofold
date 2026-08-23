@@ -18,6 +18,8 @@ export type { RegistrationDecision } from './plan/registration.ts'
 export { completeRegistration, instanceIsEmpty, mayRegister } from './plan/registration.ts'
 export type { ProcedureInput, ProcedureName, ProcedureOutput } from './procedures.ts'
 export { isProcedureName, procedures, runProcedure } from './procedures.ts'
+export type { ReconcileInput, ReconcileResult } from './reconcile/reconcile.ts'
+export { reconcile, unclearedFor } from './reconcile/reconcile.ts'
 export type {
   CreateTransactionInput,
   CreateTransactionResult,
