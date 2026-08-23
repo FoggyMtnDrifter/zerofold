@@ -1,5 +1,4 @@
 import { schema } from '@zerofold/db'
-import { calendarDate } from '@zerofold/shared/date'
 import { milli, ZERO } from '@zerofold/shared/money'
 import { and, eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
