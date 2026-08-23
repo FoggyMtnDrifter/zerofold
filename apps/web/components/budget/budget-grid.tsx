@@ -143,10 +143,14 @@ export function BudgetGrid({ planId, view }: { planId: string; view: BudgetView 
                     className="flex items-center gap-2 border-b border-hairline/60 px-4 py-1 text-sm hover:bg-surface-sunken"
                   >
                     <span
-                      className={cn('flex-1 truncate', category.hidden && 'text-ink-subtle italic')}
+                      className={cn(
+                        'flex flex-1 items-baseline gap-1.5 truncate',
+                        category.hidden && 'text-ink-subtle italic',
+                      )}
                     >
                       {category.name}
-                      {category.hidden && <span className="ml-1.5 text-2xs">(hidden)</span>}
+                      {category.hidden && <span className="text-2xs">(hidden)</span>}
+                      {category.card && <CardNote card={category.card} />}
                     </span>
 
                     <AssignedCell
@@ -208,6 +212,31 @@ function AssignedCell({
       }}
       className="h-7 w-32 text-right tabular-nums"
     />
+  )
+}
+
+/**
+ * What a card still owes that no category has funded.
+ *
+ * Shown on the payment category's row because that is where someone looks when deciding what to
+ * pay. Covered debt is not shown: it is already sitting in the row's own available figure, and
+ * printing the same money twice under two names is how a budget stops being believed.
+ */
+function CardNote({
+  card,
+}: {
+  card: NonNullable<BudgetView['groups'][number]['categories'][number]['card']>
+}) {
+  if (card.uncoveredDebt <= 0n) {
+    return <span className="text-2xs text-ink-subtle">card</span>
+  }
+  return (
+    <span
+      className="rounded bg-underfunded-wash px-1.5 py-0.5 text-2xs text-underfunded"
+      title="Debt from before you budgeted, or from spending no category funded. Paying it comes out of Ready to Assign."
+    >
+      <Money amount={card.uncoveredDebt} tone="neutral" /> not covered
+    </span>
   )
 }
 

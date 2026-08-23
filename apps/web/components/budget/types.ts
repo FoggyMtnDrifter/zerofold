@@ -1,8 +1,16 @@
 /** The budget grid as the server hands it over. Mirrors `BudgetView` from the command layer. */
+export interface CardState {
+  readonly accountId: string
+  readonly coveredDebt: bigint
+  readonly uncoveredDebt: bigint
+}
+
 export interface BudgetCell {
   readonly categoryId: string
   readonly name: string
   readonly hidden: boolean
+  /** Set when this row is a credit card's payment category. */
+  readonly card: CardState | null
   readonly budgeted: bigint
   readonly activity: bigint
   readonly balance: bigint

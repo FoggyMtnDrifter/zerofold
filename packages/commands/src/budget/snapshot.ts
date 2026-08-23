@@ -1,7 +1,20 @@
-import type { EngineInput, MonthInput } from '@zerofold/budget-engine'
+import type {
+  Assignment,
+  CardEvent,
+  CardInput,
+  EngineInput,
+  LedgerEntry,
+  MonthInput,
+} from '@zerofold/budget-engine'
 import type { Db } from '@zerofold/db'
 import { schema } from '@zerofold/db'
-import { addMonths, type BudgetMonth, budgetMonth, monthsBetween } from '@zerofold/shared/date'
+import {
+  addMonths,
+  type BudgetMonth,
+  budgetMonth,
+  calendarDate,
+  monthsBetween,
+} from '@zerofold/shared/date'
 import { add, type Milliunits, milli, ZERO } from '@zerofold/shared/money'
 import { and, eq, sql } from 'drizzle-orm'
 import { CommandError } from '../context.ts'
@@ -22,15 +35,6 @@ export const CREDIT_ACCOUNT_TYPES = ['creditCard', 'lineOfCredit'] as const
  * budget is, and neither knows the other. That is what lets the engine be tested against a
  * measured table with no database in sight.
  */
-
-/** A month plus its category cells, keyed for assembly. */
-interface CellRow {
-  readonly month: string
-  readonly categoryId: string
-  readonly budgeted: bigint
-  readonly activity: bigint
-  readonly creditActivity: bigint
-}
 
 /**
  * The months a plan spans.
@@ -105,18 +109,27 @@ function incomeByMonth(db: Db, planId: string): Map<string, Milliunits> {
 }
 
 /**
- * Category activity by month, with the credit-funded part separated out.
+ * Every categorised transaction, as the engine's ledger.
  *
- * Splits contribute through their subtransactions rather than their parent, because the parent
- * of a split carries no category of its own — counting both would double every split.
+ * Individually rather than summed, because coverage is applied one charge at a time against a
+ * running balance and the order decides the answer (R1, R2, R6, R7′). A sum cannot express
+ * "this charge was covered and that one was not".
+ *
+ * Splits contribute through their subtransactions rather than their parent, which carries no
+ * category of its own — counting both would double every split.
  */
-function activityByMonth(db: Db, planId: string): CellRow[] {
+function ledgerEntries(db: Db, planId: string): LedgerEntry[] {
+  const isCredit = sql<number>`case when ${schema.account.type} in ('creditCard', 'lineOfCredit') then 1 else 0 end`
+  const budgetable = sql`${schema.category.internalKind} is null`
+
   const plain = db
     .select({
-      month: sql<string>`substr(${schema.transaction.date}, 1, 7) || '-01'`,
+      id: schema.transaction.id,
+      date: schema.transaction.date,
       categoryId: schema.transaction.categoryId,
-      total: sql<bigint>`sum(${schema.transaction.amount})`,
-      credit: sql<bigint>`sum(case when ${schema.account.type} in ('creditCard', 'lineOfCredit') then ${schema.transaction.amount} else 0 end)`,
+      amount: schema.transaction.amount,
+      accountId: schema.transaction.accountId,
+      credit: isCredit,
     })
     .from(schema.transaction)
     .innerJoin(schema.account, eq(schema.account.id, schema.transaction.accountId))
@@ -127,18 +140,19 @@ function activityByMonth(db: Db, planId: string): CellRow[] {
         eq(schema.transaction.deleted, false),
         eq(schema.account.onBudget, true),
         eq(schema.account.deleted, false),
-        sql`${schema.category.internalKind} is null or ${schema.category.internalKind} = 'credit_card_payment'`,
+        budgetable,
       ),
     )
-    .groupBy(sql`1, 2`)
     .all()
 
   const split = db
     .select({
-      month: sql<string>`substr(${schema.transaction.date}, 1, 7) || '-01'`,
+      id: schema.subtransaction.id,
+      date: schema.transaction.date,
       categoryId: schema.subtransaction.categoryId,
-      total: sql<bigint>`sum(${schema.subtransaction.amount})`,
-      credit: sql<bigint>`sum(case when ${schema.account.type} in ('creditCard', 'lineOfCredit') then ${schema.subtransaction.amount} else 0 end)`,
+      amount: schema.subtransaction.amount,
+      accountId: schema.transaction.accountId,
+      credit: isCredit,
     })
     .from(schema.subtransaction)
     .innerJoin(schema.transaction, eq(schema.transaction.id, schema.subtransaction.transactionId))
@@ -151,26 +165,75 @@ function activityByMonth(db: Db, planId: string): CellRow[] {
         eq(schema.transaction.deleted, false),
         eq(schema.account.onBudget, true),
         eq(schema.account.deleted, false),
-        sql`${schema.category.internalKind} is null or ${schema.category.internalKind} = 'credit_card_payment'`,
+        budgetable,
       ),
     )
-    .groupBy(sql`1, 2`)
     .all()
 
   return [...plain, ...split]
     .filter((r): r is typeof r & { categoryId: string } => r.categoryId !== null)
     .map((r) => ({
-      month: r.month,
+      id: r.id,
       categoryId: r.categoryId,
-      budgeted: 0n,
-      activity: BigInt(r.total ?? 0),
-      creditActivity: BigInt(r.credit ?? 0),
+      date: calendarDate(r.date),
+      amount: milli(r.amount),
+      accountId: r.accountId,
+      /*
+       * `Number(...)`, not `=== 0`.
+       *
+       * The connection runs with `safeIntegers`, so a raw `sql<number>` comes back as a BigInt
+       * and `0n === 0` is false. Every cash transaction would be treated as a card charge —
+       * silently, since credit overspending does not touch Ready to Assign, so the only symptom
+       * is a figure that stays still when it should move. The custom column types exist to stop
+       * this; a raw SQL expression steps around them.
+       */
+      isCash: Number(r.credit) === 0,
+    }))
+}
+
+/**
+ * Everything on a credit account that no budget category funded.
+ *
+ * One query for three things that behave identically: payments transferred in, interest nobody
+ * categorised (R63), and the negative opening balance a card arrives with (R37). What they have
+ * in common is precisely what matters — the budget never assigned money for them.
+ *
+ * Amounts categorised to Inflow on a card are included, because they are not income either
+ * (R64); they reduce debt like any other money arriving at the card.
+ */
+function cardEvents(db: Db, planId: string): CardEvent[] {
+  return db
+    .select({
+      id: schema.transaction.id,
+      date: schema.transaction.date,
+      amount: schema.transaction.amount,
+      accountId: schema.transaction.accountId,
+    })
+    .from(schema.transaction)
+    .leftJoin(schema.category, eq(schema.category.id, schema.transaction.categoryId))
+    .innerJoin(schema.account, eq(schema.account.id, schema.transaction.accountId))
+    .where(
+      and(
+        eq(schema.transaction.planId, planId),
+        eq(schema.transaction.deleted, false),
+        eq(schema.account.deleted, false),
+        sql`${schema.account.type} in ('creditCard', 'lineOfCredit')`,
+        sql`${schema.category.internalKind} is not null or ${schema.transaction.categoryId} is null`,
+      ),
+    )
+    .all()
+    .map((r) => ({
+      id: r.id,
+      date: calendarDate(r.date),
+      amount: milli(r.amount),
+      accountId: r.accountId,
     }))
 }
 
 /** Assignments, which are stored rather than derived — the one authoritative input. */
-function budgetedByMonth(db: Db, planId: string): CellRow[] {
-  return db
+function assignmentsByMonth(db: Db, planId: string): Map<string, Assignment[]> {
+  const out = new Map<string, Assignment[]>()
+  const rows = db
     .select({
       month: schema.monthCategory.month,
       categoryId: schema.monthCategory.categoryId,
@@ -179,13 +242,13 @@ function budgetedByMonth(db: Db, planId: string): CellRow[] {
     .from(schema.monthCategory)
     .where(and(eq(schema.monthCategory.planId, planId), eq(schema.monthCategory.deleted, false)))
     .all()
-    .map((r) => ({
-      month: r.month,
-      categoryId: r.categoryId,
-      budgeted: r.budgeted,
-      activity: 0n,
-      creditActivity: 0n,
-    }))
+
+  for (const row of rows) {
+    const bucket = out.get(row.month) ?? []
+    bucket.push({ categoryId: row.categoryId, budgeted: milli(row.budgeted) })
+    out.set(row.month, bucket)
+  }
+  return out
 }
 
 /**
@@ -193,7 +256,8 @@ function budgetedByMonth(db: Db, planId: string): CellRow[] {
  *
  * Hidden categories are included: hiding is a pure display flag (R14) and a hidden category
  * keeps its balance and still counts toward the month's totals (R15). Excluding them here
- * would quietly delete money from the budget.
+ * would quietly delete money from the budget. Payment categories are included too — they hold
+ * money and appear in the grid.
  */
 export function budgetableCategories(db: Db, planId: string): readonly string[] {
   return db
@@ -212,41 +276,58 @@ export function budgetableCategories(db: Db, planId: string): readonly string[] 
     .map((r) => r.id)
 }
 
+/** The credit accounts and the payment category each one projects into the budget. */
+export function planCards(db: Db, planId: string): readonly CardInput[] {
+  return db
+    .select({
+      accountId: schema.account.id,
+      paymentCategoryId: schema.category.id,
+    })
+    .from(schema.account)
+    .innerJoin(schema.category, eq(schema.category.creditAccountId, schema.account.id))
+    .where(
+      and(
+        eq(schema.account.planId, planId),
+        eq(schema.account.deleted, false),
+        eq(schema.category.deleted, false),
+      ),
+    )
+    .all()
+}
+
+const monthOf = (date: string) => `${date.slice(0, 7)}-01`
+
 export function snapshot(db: Db, planId: string, today: BudgetMonth): EngineInput {
   const months = planMonths(db, planId, today)
-  const categories = budgetableCategories(db, planId)
   const income = incomeByMonth(db, planId)
+  const assignments = assignmentsByMonth(db, planId)
 
-  const cells = new Map<string, Map<string, CellRow>>()
-  for (const row of [...budgetedByMonth(db, planId), ...activityByMonth(db, planId)]) {
-    const bucket = cells.get(row.month) ?? new Map<string, CellRow>()
-    const existing = bucket.get(row.categoryId)
-    bucket.set(
-      row.categoryId,
-      existing
-        ? {
-            ...existing,
-            budgeted: existing.budgeted + row.budgeted,
-            activity: existing.activity + row.activity,
-            creditActivity: existing.creditActivity + row.creditActivity,
-          }
-        : row,
-    )
-    cells.set(row.month, bucket)
+  const entries = new Map<string, LedgerEntry[]>()
+  for (const entry of ledgerEntries(db, planId)) {
+    const key = monthOf(entry.date)
+    const bucket = entries.get(key)
+    if (bucket) bucket.push(entry)
+    else entries.set(key, [entry])
+  }
+
+  const events = new Map<string, CardEvent[]>()
+  for (const event of cardEvents(db, planId)) {
+    const key = monthOf(event.date)
+    const bucket = events.get(key)
+    if (bucket) bucket.push(event)
+    else events.set(key, [event])
   }
 
   return {
-    categories,
+    categories: budgetableCategories(db, planId),
+    cards: planCards(db, planId),
     months: months.map(
       (month): MonthInput => ({
         month,
         income: income.get(month) ?? ZERO,
-        cells: [...(cells.get(month)?.values() ?? [])].map((cell) => ({
-          categoryId: cell.categoryId,
-          budgeted: milli(cell.budgeted),
-          activity: milli(cell.activity),
-          creditActivity: milli(cell.creditActivity),
-        })),
+        assignments: assignments.get(month) ?? [],
+        entries: entries.get(month) ?? [],
+        cardEvents: events.get(month) ?? [],
       }),
     ),
   }

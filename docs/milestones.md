@@ -12,7 +12,7 @@ recorded in [`behavior/divergences.md`](behavior/divergences.md).
 | M1 | Instance, accounts and identity: first-run setup, invite-only registration, plans, all thirteen account types, Docker image | **done** |
 | M2 | The register: virtualised at 50,000 rows, entry, editing, bulk actions, reconciliation, undo/redo | **done** |
 | M3 | The budget engine and budget view: Ready to Assign, assignment, carryover, the month grid | **done** |
-| M4 | Credit cards: payment categories, covered and uncovered debt, cash and credit overspending | not started |
+| M4 | Credit cards: payment categories, covered and uncovered debt, cash and credit overspending | **done** |
 | M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | not started |
 | M6 | Scheduled transactions: cadences, auto-entry, approval | not started |
 | M7 | Import: CSV, OFX, QIF, and migration from another budgeting app | not started |
@@ -55,6 +55,24 @@ Deliberately not in M3: credit-card payment categories have engine support for t
 no UI and no coverage arithmetic yet — that is M4. Targets are M5, so no category shows what it
 needs. Category and group editing (rename, reorder, hide, delete) is not built; the starter set
 is what a plan has.
+
+## M4 — done
+
+Coverage is sequential against a running balance, so the engine takes a ledger of transactions
+rather than per-category totals: a charge is covered by whatever the category has available when
+that charge is applied, and no sum can express "this one was covered and that one was not".
+Order is cash first (R2), then date (R6), then transaction id (R7′).
+
+Covered and uncovered debt are tracked per card. A payment settles covered debt first and costs
+Ready to Assign only for the uncovered part (R60′) — the rule that was falsified once already
+and now has the case that falsified it as a test. Refunds pay down uncovered debt first (R62,
+R69); interest and opening balances create it (R63, R37).
+
+The P1-03 plan is reproduced end to end from its real transaction ids, including the
+Visa 120000 / Amex 50000 split — which is how R7 was found to be wrong.
+
+Deliberately not in M4: the credit-card payment *target* (R39, an implicit funding requirement
+equal to the card balance) belongs with targets in M5.
 
 ## Open behaviour questions
 

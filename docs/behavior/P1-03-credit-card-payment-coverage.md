@@ -118,10 +118,15 @@ Both identities are candidates for engine property tests.
 
 ## Open questions — all resolved
 
-1. ~~Intra-category multi-card ordering.~~ **Resolved by P1-11.** Coverage follows transaction
-   *date* order (not amount, not entry order), tiebroken by account order. Re-checking this
-   observation against the P1-11 rules reproduces every figure: the ordering that the
-   uncontrolled data merely *fit* is now the ordering that was independently *derived*.
+1. ~~Intra-category multi-card ordering.~~ **Resolved by P1-11, then corrected by
+   [P1-12](P1-12-coverage-tiebreak.md).** Coverage follows transaction *date* order (not amount,
+   not entry order), tiebroken by **transaction id ascending** (R7′).
+
+   > The claim that once stood here — that P1-11's rules reproduce every figure in this
+   > document — was **wrong**, and computing it is what showed that. R7's account-order tiebreak
+   > gets all three of this plan's contested categories wrong, in either account order. The
+   > engine's fixture now uses the real transaction ids from the raw snapshot and reproduces
+   > every figure, including the Visa 120000 / Amex 50000 split.
 2. ~~R2 (cash before credit) inferred from a single category.~~ **Resolved by P1-11 / T3**,
    where the cash charge was 10 days later and entered second yet still consumed first.
 3. ~~Per-transaction running balance vs. aggregate per category.~~ **Resolved:** coverage is

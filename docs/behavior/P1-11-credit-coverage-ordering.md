@@ -97,6 +97,11 @@ The surviving explanation is **account creation / sort order**.
   order among themselves), then credit (in date order, tiebroken by R7).
 - **R7 — Same-date tiebreak is account order,** not transaction creation order, not account
   name, not account id.
+  > **SUPERSEDED by [R7′](P1-12-coverage-tiebreak.md).** The transaction ids were never recorded
+  > here, and with two candidates per round, id order had an even chance of agreeing with
+  > account order in both T2 and T4. P1-12 constructed the discriminating case: coverage follows
+  > the **transaction id**, ascending. T1 and T3 — date beats amount, and cash before credit —
+  > are unaffected.
 
 ## Residual ambiguity
 

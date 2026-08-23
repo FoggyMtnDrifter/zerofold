@@ -9,12 +9,16 @@
  * The rules it implements are measured, not assumed. Every one carries its R-number to the
  * document in `docs/behavior/` that recorded the observation.
  */
-export { advance, type CarryState, emptyCarry, totalBudgeted } from './advance.ts'
+export { advance, type CardDebt, type CarryState, emptyCarry, totalBudgeted } from './advance.ts'
 export { type EngineOutput, readyToAssign, run } from './run.ts'
 export type {
-  CellInput,
+  Assignment,
+  CardEvent,
+  CardInput,
+  CardResult,
   CellResult,
   EngineInput,
+  LedgerEntry,
   MonthInput,
   MonthResult,
   OverspendKind,

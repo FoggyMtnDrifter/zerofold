@@ -7,10 +7,25 @@ import { and, eq } from 'drizzle-orm'
 import { CommandError } from '../context.ts'
 import { snapshot } from './snapshot.ts'
 
+export interface CardState {
+  readonly accountId: string
+  /** Debt from categorised purchases, already funded by the categories that made them. */
+  readonly coveredDebt: Milliunits
+  /** Debt no category funded: the opening balance, interest, and credit overspending. */
+  readonly uncoveredDebt: Milliunits
+}
+
 export interface BudgetCell {
   readonly categoryId: string
   readonly name: string
   readonly hidden: boolean
+  /**
+   * Set when this row is a credit card's payment category.
+   *
+   * It is not an envelope you spend from: money arrives by covering charges and leaves by
+   * paying the card, and its balance going negative is not an error (R60′).
+   */
+  readonly card: CardState | null
   readonly budgeted: Milliunits
   readonly activity: Milliunits
   readonly balance: Milliunits
@@ -93,10 +108,18 @@ export function budgetView(
     if (row.internalKind === 'inflow_rta' || row.internalKind === 'uncategorized') continue
 
     const cell = cells.get(row.categoryId)
+    const card = current.cards.find((c) => c.paymentCategoryId === row.categoryId)
     const entry: BudgetCell = {
       categoryId: row.categoryId,
       name: row.name,
       hidden: row.hidden,
+      card: card
+        ? {
+            accountId: card.accountId,
+            coveredDebt: card.coveredDebt,
+            uncoveredDebt: card.uncoveredDebt,
+          }
+        : null,
       budgeted: cell?.budgeted ?? ZERO,
       activity: cell?.activity ?? ZERO,
       balance: cell?.balance ?? ZERO,
