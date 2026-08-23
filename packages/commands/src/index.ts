@@ -24,3 +24,9 @@ export type {
   SubtransactionInput,
 } from './transaction/create-transaction.ts'
 export { createTransaction } from './transaction/create-transaction.ts'
+export type {
+  DeleteTransactionInput,
+  TransactionRef,
+  UpdateTransactionInput,
+} from './transaction/mutate.ts'
+export { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
