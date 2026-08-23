@@ -1,0 +1,119 @@
+{
+ "log": [
+  {
+   "label": "0  assigned 50000 to X",
+   "rows": {
+    "AUG": {
+     "X_bud": 50000,
+     "X_act": 0,
+     "X_bal": 50000,
+     "pay_act": 0,
+     "pay_bal": 0,
+     "income": 1039000,
+     "RTA": -25775000
+    },
+    "SEP": {
+     "X_bud": 0,
+     "X_act": 0,
+     "X_bal": 50000,
+     "pay_act": 0,
+     "pay_bal": 0,
+     "income": 0,
+     "RTA": -26057000
+    }
+   }
+  },
+  {
+   "label": "1  P1-02  charged 80000 on the card → credit overspend of 30000",
+   "rows": {
+    "AUG": {
+     "X_bud": 50000,
+     "X_act": -80000,
+     "X_bal": -30000,
+     "pay_act": 50000,
+     "pay_bal": 50000,
+     "income": 1039000,
+     "RTA": -25775000
+    },
+    "SEP": {
+     "X_bud": 0,
+     "X_act": 0,
+     "X_bal": 0,
+     "pay_act": 0,
+     "pay_bal": 50000,
+     "income": 0,
+     "RTA": -26057000
+    }
+   }
+  },
+  {
+   "label": "2  P1-04  refund 20000 to X on the card",
+   "rows": {
+    "AUG": {
+     "X_bud": 50000,
+     "X_act": -60000,
+     "X_bal": -10000,
+     "pay_act": 50000,
+     "pay_bal": 50000,
+     "income": 1039000,
+     "RTA": -25775000
+    },
+    "SEP": {
+     "X_bud": 0,
+     "X_act": 0,
+     "X_bal": 0,
+     "pay_act": 0,
+     "pay_bal": 50000,
+     "income": 0,
+     "RTA": -26057000
+    }
+   }
+  },
+  {
+   "label": "3  P1-05  uncategorised 5000 interest charge",
+   "rows": {
+    "AUG": {
+     "X_bud": 50000,
+     "X_act": -60000,
+     "X_bal": -10000,
+     "pay_act": 50000,
+     "pay_bal": 50000,
+     "income": 1039000,
+     "RTA": -25775000
+    },
+    "SEP": {
+     "X_bud": 0,
+     "X_act": 0,
+     "X_bal": 0,
+     "pay_act": 0,
+     "pay_bal": 50000,
+     "income": 0,
+     "RTA": -26057000
+    }
+   }
+  },
+  {
+   "label": "4  P1-06  3000 cash back categorised to Inflow: RTA",
+   "rows": {
+    "AUG": {
+     "X_bud": 50000,
+     "X_act": -60000,
+     "X_bal": -10000,
+     "pay_act": 50000,
+     "pay_bal": 50000,
+     "income": 1039000,
+     "RTA": -25775000
+    },
+    "SEP": {
+     "X_bud": 0,
+     "X_act": 0,
+     "X_bal": 0,
+     "pay_act": 0,
+     "pay_bal": 50000,
+     "income": 0,
+     "RTA": -26057000
+    }
+   }
+  }
+ ]
+}
