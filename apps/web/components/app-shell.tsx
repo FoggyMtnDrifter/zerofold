@@ -1,6 +1,7 @@
 import { Landmark, PieChart, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { AddAccountDialog } from '@/components/add-account-dialog'
 import { Money } from '@/components/money'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -32,10 +33,12 @@ const GROUPS = [
 export function AppShell({
   accounts,
   planName,
+  planId,
   children,
 }: {
   accounts: readonly SidebarAccount[]
   planName: string
+  planId: string
   children: ReactNode
 }) {
   const tracking = accounts.filter((a) => !a.onBudget)
@@ -58,7 +61,7 @@ export function AppShell({
         <Separator />
 
         <nav className="flex flex-col gap-0.5 p-2" aria-label="Main">
-          <NavLink icon={<Wallet className="size-4" />} label="Plan" current />
+          <NavLink icon={<Wallet className="size-4" />} label="Plan" href={`/plans/${planId}`} />
           <NavLink icon={<PieChart className="size-4" />} label="Reflect" />
           <NavLink icon={<Landmark className="size-4" />} label="All Accounts" />
         </nav>
@@ -72,9 +75,14 @@ export function AppShell({
             ))}
             {tracking.length > 0 && <AccountGroup label="Tracking" accounts={tracking} />}
             {accounts.length === 0 && (
-              <p className="px-2 py-4 text-xs text-ink-subtle">
+              <p className="px-2 pt-4 text-xs text-ink-subtle">
                 No accounts yet. Add one to start budgeting.
               </p>
+            )}
+            {planId && (
+              <div className="mt-2 px-1">
+                <AddAccountDialog planId={planId} />
+              </div>
             )}
           </div>
         </ScrollArea>
@@ -85,33 +93,45 @@ export function AppShell({
   )
 }
 
+/**
+ * A real link where there is somewhere to go, a button where there is not yet.
+ *
+ * An anchor with `href="#"` lies: it breaks middle-click, offers a meaningless target to a
+ * screen reader, and becomes a real bug the day someone assumes it navigates. Destinations
+ * become links as their routes land — Plan did, with the budget view.
+ */
 function NavLink({
   icon,
   label,
+  href,
   current = false,
 }: {
   icon: ReactNode
   label: string
+  href?: string
   current?: boolean
 }) {
+  const className = cn(
+    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
+    current
+      ? 'bg-brand text-brand-contrast'
+      : 'text-ink-muted hover:bg-sidebar-accent hover:text-ink',
+  )
+
+  if (!href) {
+    return (
+      <button type="button" className={className}>
+        {icon}
+        {label}
+      </button>
+    )
+  }
+
   return (
-    // A button, not an anchor: these destinations do not exist yet, and `href="#"` is a link
-    // that lies — it breaks middle-click, offers a meaningless target to a screen reader, and
-    // silently becomes a real bug the day someone assumes it navigates. They become `Link`s
-    // when the routes land.
-    <button
-      type="button"
-      aria-current={current ? 'page' : undefined}
-      className={cn(
-        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
-        current
-          ? 'bg-brand text-brand-contrast'
-          : 'text-ink-muted hover:bg-sidebar-accent hover:text-ink',
-      )}
-    >
+    <Link href={href} aria-current={current ? 'page' : undefined} className={className}>
       {icon}
       {label}
-    </button>
+    </Link>
   )
 }
 

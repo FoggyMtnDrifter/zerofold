@@ -35,7 +35,7 @@ test.describe
         // `waitFor`, not `isVisible`: the latter answers immediately about the current DOM and
         // would report "not signed in" for a sign-in that simply had not finished rendering.
         const landed = await page
-          .getByRole('heading', { name: 'Plan' })
+          .getByText('Ready to assign')
           .waitFor({ state: 'visible', timeout: 5_000 })
           .then(() => true)
           .catch(() => false)
@@ -45,7 +45,7 @@ test.describe
         await expect(page.getByRole('alert').filter({ hasText: 'Too many attempts' })).toBeVisible()
         await page.waitForTimeout(6_000)
       }
-      await expect(page.getByRole('heading', { name: 'Plan' })).toBeVisible()
+      await expect(page.getByText('Ready to assign')).toBeVisible()
 
       await page.getByRole('link', { name: ACCOUNT }).click()
       await expect(page.getByRole('grid', { name: 'Transactions' })).toBeVisible()

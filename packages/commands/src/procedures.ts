@@ -1,4 +1,4 @@
-import type { Db } from '@zerofold/db'
+import { type Db, schema } from '@zerofold/db'
 import {
   type BudgetMonth,
   budgetMonth,
@@ -6,6 +6,7 @@ import {
   calendarDate,
 } from '@zerofold/shared/date'
 import { type Milliunits, milli } from '@zerofold/shared/money'
+import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { createAccount } from './account/create-account.ts'
 import {
@@ -339,8 +340,20 @@ export const procedures = {
         input.planId,
         monthOfToday(today),
       )
+      /*
+       * `dirtyFrom` travels with the answer because a plan edited since its last recompute is
+       * *expected* to disagree. Without it, "the cache is stale" and "the cache is wrong" look
+       * identical, and only the second is worth waking up for.
+       */
+      const dirty = db
+        .select({ from: schema.planRecalc.dirtyFromMonth })
+        .from(schema.planRecalc)
+        .where(eq(schema.planRecalc.planId, input.planId))
+        .get()
+
       return {
         ok: discrepancies.length === 0,
+        dirtyFrom: dirty?.from ?? null,
         discrepancies: discrepancies.map((d) => ({
           ...d,
           cached: typeof d.cached === 'bigint' ? d.cached.toString() : d.cached,

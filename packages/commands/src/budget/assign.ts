@@ -3,7 +3,6 @@ import type { BudgetMonth } from '@zerofold/shared/date'
 import { type Milliunits, sub, ZERO } from '@zerofold/shared/money'
 import { and, eq } from 'drizzle-orm'
 import { type CommandContext, CommandError, type PlanWrite, withPlanWrite } from '../context.ts'
-import { refreshCache } from './recompute.ts'
 
 export interface AssignInput {
   readonly planId: string
@@ -23,6 +22,12 @@ export interface AssignInput {
  * The caller states the new total rather than a movement, because that is what the budget grid
  * edits — a cell you type into. The *ledger* records the difference, since money moving is what
  * actually happened.
+ *
+ * This writes the input and marks the plan dirty; it does **not** refresh the derived cache.
+ * It used to, and that made every keystroke cost a full recompute — measured at just over a
+ * second on a five-year plan with 200 categories, against a 16ms target for the repaint. The
+ * budget view computes from the engine rather than reading the cache, so nothing on screen
+ * depends on the cache being current; `recompute` brings it up to date when something does.
  */
 export function assign(ctx: CommandContext, input: AssignInput, today: BudgetMonth): void {
   const category = ctx.db
@@ -49,7 +54,6 @@ export function assign(ctx: CommandContext, input: AssignInput, today: BudgetMon
 
     extendHorizon(ctx, input.planId, input.month, today)
     write.markDirtyFrom(input.month)
-    refreshCache(ctx, input.planId, today, write)
 
     write.recordUndo({
       label: input.groupLabel ?? 'Assign',

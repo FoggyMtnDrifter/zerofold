@@ -231,11 +231,11 @@ test.describe
       await page.getByRole('button', { name: 'Sign in' }).click()
 
       // Lands on the plan created by the API earlier in this sequence.
-      await expect(page.getByRole('heading', { name: 'Plan' })).toBeVisible()
+      await expect(page.getByText('Ready to assign')).toBeVisible()
       await expect(page.getByRole('button', { name: 'All Accounts' })).toBeVisible()
 
       await page.emulateMedia({ colorScheme: 'dark' })
-      await expect(page.getByRole('heading', { name: 'Plan' })).toBeVisible()
+      await expect(page.getByText('Ready to assign')).toBeVisible()
     })
 
     test('a wrong password does not reveal whether the account exists', async ({ page }) => {

@@ -11,7 +11,7 @@ recorded in [`behavior/divergences.md`](behavior/divergences.md).
 |---|-----------|--------|
 | M1 | Instance, accounts and identity: first-run setup, invite-only registration, plans, all thirteen account types, Docker image | **done** |
 | M2 | The register: virtualised at 50,000 rows, entry, editing, bulk actions, reconciliation, undo/redo | **done** |
-| M3 | The budget engine and budget view: Ready to Assign, assignment, carryover, the month grid | not started |
+| M3 | The budget engine and budget view: Ready to Assign, assignment, carryover, the month grid | **done** |
 | M4 | Credit cards: payment categories, covered and uncovered debt, cash and credit overspending | not started |
 | M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | not started |
 | M6 | Scheduled transactions: cadences, auto-entry, approval | not started |
@@ -36,6 +36,25 @@ when the statement disagrees. Undo and redo over an inverse-command log ([ADR-00
 Deliberately not in M2: splits and transfers have command-layer support and tests but no
 dedicated UI yet; they arrive with the budget view in M3, where a category picker exists to
 attach them to.
+
+## M3 — done
+
+`packages/budget-engine` is pure and implements the measured rules: the Ready to Assign formula
+and its three different time windows (R8), future assignments reducing the current month (R9),
+cash overspending charged to the following month (R10), credit overspending charged to nothing
+(R61), unconditional carryforward of positive balances (R11), and the cash-before-credit
+ordering that decides which is which (R2).
+
+The budget view computes from the engine rather than reading the cache, and `budget.verify`
+asserts the two agree. Assignment appends to the money-movement ledger and never edits it (R13).
+
+Measured, at five years and 200 categories — 12,000 cells: budget view **16ms** against a 1s
+target, assignment **0.9ms** against 16ms, full recompute ~1s and verify 60ms.
+
+Deliberately not in M3: credit-card payment categories have engine support for the *rules* but
+no UI and no coverage arithmetic yet — that is M4. Targets are M5, so no category shows what it
+needs. Category and group editing (rename, reorder, hide, delete) is not built; the starter set
+is what a plan has.
 
 ## Open behaviour questions
 

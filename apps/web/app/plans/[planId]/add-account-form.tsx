@@ -35,7 +35,7 @@ const toMilliunits = (input: string): string => {
   return (negative ? -milli : milli).toString()
 }
 
-export function AddAccountForm({ planId }: { planId: string }) {
+export function AddAccountForm({ planId, onCreated }: { planId: string; onCreated?: () => void }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -76,14 +76,15 @@ export function AddAccountForm({ planId }: { planId: string }) {
     const { accountId } = result.data as { accountId: string }
     router.push(`/plans/${planId}/accounts/${accountId}`)
     router.refresh()
+    onCreated?.()
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-0 bg-transparent p-0 shadow-none">
+      <CardHeader className="px-0">
         <CardTitle className="text-base">Add an account</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0">
         <form onSubmit={onSubmit} className="grid gap-3">
           <div className="grid gap-1.5">
             <Label htmlFor="name">Name</Label>

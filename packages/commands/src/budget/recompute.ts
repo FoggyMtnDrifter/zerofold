@@ -14,6 +14,12 @@ import { snapshot } from './snapshot.ts'
  * reads the inputs, recomputes from scratch, and overwrites the outputs. `verify` below runs
  * the same computation and compares instead of writing, which is what makes the cache
  * falsifiable rather than merely convenient.
+ *
+ * Nothing on screen waits for this. The budget view runs the engine over live inputs, so the
+ * cache exists for the things that cannot: delta requests, which need a stable
+ * `knowledge_at_change` per row, and the compatible API. Writes dominate the cost — a
+ * five-year plan with 200 categories is 12,000 rows and about a second, against 16ms for the
+ * engine pass over the same data — which is exactly why editing a cell no longer triggers one.
  */
 export function recompute(ctx: CommandContext, planId: string, today: BudgetMonth): void {
   withPlanWrite(ctx, planId, (write) => {
@@ -195,7 +201,12 @@ export function verify(ctx: CommandContext, planId: string, today: BudgetMonth):
   return out
 }
 
-/** Recompute inside a write that is already open, for commands that just changed an input. */
+/**
+ * Recompute inside a write that is already open.
+ *
+ * For callers that must leave the cache current within one transaction — a delta request served
+ * from a dirty plan, for instance. Ordinary edits mark the plan dirty and move on.
+ */
 export const refreshCache = (
   ctx: CommandContext,
   planId: string,

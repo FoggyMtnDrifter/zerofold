@@ -42,7 +42,7 @@ export default async function PlanLayout({
   }))
 
   return (
-    <AppShell accounts={accounts} planName={plan.name}>
+    <AppShell accounts={accounts} planName={plan.name} planId={planId}>
       {children}
     </AppShell>
   )
