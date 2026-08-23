@@ -1,6 +1,6 @@
 # P2-02 — Weekly cadence, `goal_day`, and the current-month decay
 
-- **Status:** RESOLVED, with one residual ambiguity noted.
+- **Status:** RESOLVED. The residual ambiguity was subsequently discriminated — see below.
 - **Evidence class:** CONSTRUCTED in the UI, observed via the API. **Raw:** `_raw/p2-02.json`.
 - **Units:** milliunits. Observation date: 2026-08-22 (local) / 2026-08-23 (UTC).
 
@@ -43,14 +43,23 @@ five weeks, by the 22nd only two. This is correct behaviour (you cannot fund a M
 already passed) but it is easy to miss entirely, because it is invisible unless you look at a
 partially-elapsed month with a weekday that occurs five times.
 
-### Residual ambiguity
+### Discriminating the two candidate rules
 
 "Remaining occurrences of the target weekday" and "whole weeks remaining in the month" both
-predict 2 here. Distinguishing them requires observing on a date where the two diverge, which
-means either waiting or manipulating the clock — neither available against a hosted oracle.
-**Chosen interpretation: count occurrences of `goal_day`**, which is the reading consistent
-with the field's existence and with the September result. Flagged for re-check if a
-convenient date arises.
+predict 2 for Monday. They were separated without waiting or clock manipulation, by changing
+only the **weekday** on the same target, in the same month, on the same observation date:
+
+| `goal_day` | weekday | occurrences remaining after Aug 22 | predicted | **observed** |
+|------------|---------|------------------------------------|-----------|--------------|
+| 1 | Monday | 24th, 31st → **2** | 50000 | **50000** ✓ |
+| 5 | Friday | 28th → **1** | 25000 | **25000** ✓ |
+
+"Weeks remaining in the month" is a property of the month and the date alone — it would yield
+the **same** figure for both. It does not. **Occurrence counting is confirmed**, and this is a
+measured result rather than a chosen interpretation.
+
+September, wholly in the future, reported 100000 = 4 × 25000 for Friday — all four occurrences
+— confirming the future-month branch simultaneously.
 
 ## Engine consequence — a cache invalidation this design did not account for
 
