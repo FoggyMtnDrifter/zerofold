@@ -1,0 +1,29 @@
+{
+ "account": {
+  "id": "60abe808-9f0d-4d50-ad35-ccea3be37c50",
+  "name": "ZFX Visa",
+  "type": "creditCard",
+  "on_budget": true,
+  "closed": false,
+  "note": null,
+  "balance": -300000,
+  "balance_formatted": "-$300.00",
+  "balance_currency": -300,
+  "cleared_balance": -300000,
+  "cleared_balance_formatted": "-$300.00",
+  "cleared_balance_currency": -300,
+  "uncleared_balance": 0,
+  "uncleared_balance_formatted": "$0.00",
+  "uncleared_balance_currency": 0,
+  "transfer_payee_id": "7a216657-155d-410b-b4ea-ec3cdf2b77f0",
+  "direct_import_linked": false,
+  "direct_import_in_error": false,
+  "last_reconciled_at": null,
+  "debt_original_balance": null,
+  "debt_interest_rates": {},
+  "debt_minimum_payments": {},
+  "debt_escrow_amounts": {},
+  "deleted": false
+ },
+ "payCatId": "4ef12214-0c4d-4c79-95c0-4541db6a71e7"
+}
