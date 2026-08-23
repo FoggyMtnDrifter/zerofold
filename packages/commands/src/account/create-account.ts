@@ -167,6 +167,7 @@ export function createAccount(ctx: CommandContext, input: CreateAccountInput): C
      * balance on a cash account does (R22).
      */
     let startingBalanceTransactionId: string | null = null
+    const month = `${ctx.today.slice(0, 7)}-01`
     if (input.balance !== ZERO) {
       const startingPayeeId = ensureSystemPayee(
         ctx,
@@ -217,6 +218,21 @@ export function createAccount(ctx: CommandContext, input: CreateAccountInput): C
         .run()
 
       write.markDirtyFrom(`${ctx.today.slice(0, 7)}-01`)
+
+      /*
+       * Pull the plan's first month back to cover this transaction.
+       *
+       * Without it a plan whose only history is an opening balance has no months at all, and
+       * the budget for the month that money arrived in cannot be opened. `createTransaction`
+       * does the same for every other row; the starting balance is written directly here and
+       * would otherwise be the one transaction that never widened the horizon.
+       */
+      tx.update(schema.plan)
+        .set({
+          firstMonth: sql`MIN(COALESCE(${schema.plan.firstMonth}, ${month}), ${month})`,
+        })
+        .where(eq(schema.plan.id, input.planId))
+        .run()
     }
 
     return { accountId, transferPayeeId, startingBalanceTransactionId, paymentCategoryId }

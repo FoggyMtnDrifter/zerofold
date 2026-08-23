@@ -1,5 +1,10 @@
 import type { Db } from '@zerofold/db'
-import { type CalendarDate, calendarDate } from '@zerofold/shared/date'
+import {
+  type BudgetMonth,
+  budgetMonth,
+  type CalendarDate,
+  calendarDate,
+} from '@zerofold/shared/date'
 import { type Milliunits, milli } from '@zerofold/shared/money'
 import { z } from 'zod'
 import { createAccount } from './account/create-account.ts'
@@ -10,6 +15,9 @@ import {
   reopenAccount,
 } from './account/lifecycle.ts'
 import { authorizePlan, type Role } from './authorize.ts'
+import { assign, moveMoney } from './budget/assign.ts'
+import { recompute, verify } from './budget/recompute.ts'
+import { budgetView } from './budget/view.ts'
 import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
 import { createPlan } from './plan/create-plan.ts'
 import { reconcile } from './reconcile/reconcile.ts'
@@ -45,6 +53,24 @@ const calendarDateSchema: z.ZodType<CalendarDate, unknown> = z
   })
 
 const planScoped = z.object({ planId: z.string().min(1) })
+
+/**
+ * A budget month: the first day of it.
+ *
+ * Rejecting any other day rather than truncating, because "2026-08-15" from a caller means they
+ * think months work differently than they do, and silently rounding it hides that.
+ */
+const monthSchema: z.ZodType<BudgetMonth, unknown> = z
+  .string()
+  .regex(/^\d{4}-\d{2}-01$/, 'expected the first of a month, YYYY-MM-01')
+  .transform((v, ctx) => {
+    try {
+      return budgetMonth(v)
+    } catch {
+      ctx.addIssue({ code: 'custom', message: `${v} is not a real month` })
+      return z.NEVER
+    }
+  })
 
 /**
  * A procedure.
@@ -256,6 +282,74 @@ export const procedures = {
       walk(makeContext(db, userId, today), input.planId, 'redo'),
   }),
 
+  'budget.view': define({
+    input: planScoped.extend({ month: monthSchema }),
+    plan: 'viewer',
+    handler: ({ db, today, input }) =>
+      budgetView(db, input.planId, input.month, monthOfToday(today)),
+  }),
+
+  'budget.assign': define({
+    input: planScoped.extend({
+      month: monthSchema,
+      categoryId: z.string().min(1),
+      budgeted: milliunits,
+      note: z.string().max(500).optional(),
+      groupId: z.string().min(1).optional(),
+      groupLabel: z.string().min(1).max(80).optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      assign(makeContext(db, userId, today), input, monthOfToday(today))
+      return { ok: true as const }
+    },
+  }),
+
+  'budget.move': define({
+    input: planScoped.extend({
+      month: monthSchema,
+      fromCategoryId: z.string().min(1).nullable(),
+      toCategoryId: z.string().min(1).nullable(),
+      amount: milliunits,
+      note: z.string().max(500).optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      moveMoney(makeContext(db, userId, today), input, monthOfToday(today))
+      return { ok: true as const }
+    },
+  }),
+
+  'budget.recompute': define({
+    input: planScoped,
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      recompute(makeContext(db, userId, today), input.planId, monthOfToday(today))
+      return { ok: true as const }
+    },
+  }),
+
+  /** Asserts the cache equals a from-scratch recompute; see `recompute.ts`. */
+  'budget.verify': define({
+    input: planScoped,
+    plan: 'viewer',
+    handler: ({ db, userId, today, input }) => {
+      const discrepancies = verify(
+        makeContext(db, userId, today),
+        input.planId,
+        monthOfToday(today),
+      )
+      return {
+        ok: discrepancies.length === 0,
+        discrepancies: discrepancies.map((d) => ({
+          ...d,
+          cached: typeof d.cached === 'bigint' ? d.cached.toString() : d.cached,
+          computed: typeof d.computed === 'bigint' ? d.computed.toString() : d.computed,
+        })),
+      }
+    },
+  }),
+
   'account.reconcile': define({
     input: planScoped.extend({
       accountId: z.string().min(1),
@@ -285,7 +379,14 @@ const REPLAYABLE: Record<string, (ctx: CommandContext, input: unknown) => void> 
   'transaction.restore': (ctx, input) => {
     restoreTransaction(ctx, procedures['transaction.restore'].input.parse(input))
   },
+  'budget.assign': (ctx, input) => {
+    const parsed = procedures['budget.assign'].input.parse(input)
+    assign(ctx, parsed, monthOfToday(ctx.today))
+  },
 }
+
+/** The month `today` falls in. The engine works in months; the clock does not. */
+const monthOfToday = (today: CalendarDate): BudgetMonth => budgetMonth(`${today.slice(0, 7)}-01`)
 
 /**
  * Walk the stack one step.

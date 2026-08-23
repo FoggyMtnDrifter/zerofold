@@ -1,7 +1,23 @@
 /**
  * The budgeting engine.
  *
- * No dependencies, no I/O, no clock — ADR-0002. `today` is always an argument.
- * Implementation lands in M3; the behavioural rules it must satisfy are in docs/behavior.
+ * No I/O, no clock, no database, no React — ADR-0002. `today` is always an argument. The one
+ * import is `@zerofold/shared`, for the milliunit and calendar-date types: a second definition
+ * of what a milliunit is would be a worse outcome than the dependency, since the two would
+ * eventually round differently and only one of them would be tested here.
+ *
+ * The rules it implements are measured, not assumed. Every one carries its R-number to the
+ * document in `docs/behavior/` that recorded the observation.
  */
-export const ENGINE_VERSION = '0.0.0'
+export { advance, type CarryState, emptyCarry, totalBudgeted } from './advance.ts'
+export { type EngineOutput, readyToAssign, run } from './run.ts'
+export type {
+  CellInput,
+  CellResult,
+  EngineInput,
+  MonthInput,
+  MonthResult,
+  OverspendKind,
+} from './types.ts'
+
+export const ENGINE_VERSION = '1.0.0'

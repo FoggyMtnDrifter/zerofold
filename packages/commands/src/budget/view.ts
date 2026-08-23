@@ -1,0 +1,146 @@
+import { run } from '@zerofold/budget-engine'
+import type { Db } from '@zerofold/db'
+import { schema } from '@zerofold/db'
+import type { BudgetMonth } from '@zerofold/shared/date'
+import { add, type Milliunits, ZERO } from '@zerofold/shared/money'
+import { and, eq } from 'drizzle-orm'
+import { CommandError } from '../context.ts'
+import { snapshot } from './snapshot.ts'
+
+export interface BudgetCell {
+  readonly categoryId: string
+  readonly name: string
+  readonly hidden: boolean
+  readonly budgeted: Milliunits
+  readonly activity: Milliunits
+  readonly balance: Milliunits
+  readonly overspendKind: 'none' | 'cash' | 'credit'
+}
+
+export interface BudgetGroup {
+  readonly categoryGroupId: string
+  readonly name: string
+  readonly hidden: boolean
+  /** Excludes hidden categories (R15). */
+  readonly budgeted: Milliunits
+  readonly activity: Milliunits
+  readonly balance: Milliunits
+  readonly categories: readonly BudgetCell[]
+}
+
+export interface BudgetView {
+  readonly month: BudgetMonth
+  readonly readyToAssign: Milliunits
+  /** Month totals, which unlike group subtotals *include* hidden categories (R15). */
+  readonly income: Milliunits
+  readonly budgeted: Milliunits
+  readonly activity: Milliunits
+  readonly groups: readonly BudgetGroup[]
+  readonly months: readonly BudgetMonth[]
+}
+
+/**
+ * The budget grid for one month.
+ *
+ * Computed rather than read from the cache. The cache exists so that a *stale* read is cheap
+ * and a delta request has something to compare against; a view that served it directly would
+ * be one missed invalidation away from showing numbers that are simply wrong, and the whole
+ * promise of this application is that the numbers are right. `recompute --verify` asserts the
+ * two agree.
+ */
+export function budgetView(
+  db: Db,
+  planId: string,
+  month: BudgetMonth,
+  today: BudgetMonth,
+): BudgetView {
+  const input = snapshot(db, planId, today)
+  const output = run(input)
+
+  const current = output.months.find((m) => m.month === month)
+  if (!current) {
+    throw new CommandError(
+      `This plan has no ${month}. Assign into it to bring it into existence.`,
+      'budget.month_not_materialised',
+    )
+  }
+
+  const cells = new Map(current.cells.map((cell) => [cell.categoryId, cell]))
+
+  const rows = db
+    .select({
+      categoryId: schema.category.id,
+      name: schema.category.name,
+      hidden: schema.category.hidden,
+      groupId: schema.categoryGroup.id,
+      groupName: schema.categoryGroup.name,
+      groupHidden: schema.categoryGroup.hidden,
+      groupOrder: schema.categoryGroup.sortOrder,
+      order: schema.category.sortOrder,
+      internalKind: schema.category.internalKind,
+    })
+    .from(schema.category)
+    .innerJoin(schema.categoryGroup, eq(schema.categoryGroup.id, schema.category.categoryGroupId))
+    .where(and(eq(schema.category.planId, planId), eq(schema.category.deleted, false)))
+    .orderBy(schema.categoryGroup.sortOrder, schema.category.sortOrder)
+    .all()
+
+  const groups: BudgetGroup[] = []
+  const index = new Map<string, BudgetGroup>()
+
+  for (const row of rows) {
+    // Inflow and Uncategorized are not envelopes; they have no row in the grid.
+    if (row.internalKind === 'inflow_rta' || row.internalKind === 'uncategorized') continue
+
+    const cell = cells.get(row.categoryId)
+    const entry: BudgetCell = {
+      categoryId: row.categoryId,
+      name: row.name,
+      hidden: row.hidden,
+      budgeted: cell?.budgeted ?? ZERO,
+      activity: cell?.activity ?? ZERO,
+      balance: cell?.balance ?? ZERO,
+      overspendKind: cell?.overspendKind ?? 'none',
+    }
+
+    const existing = index.get(row.groupId)
+    if (existing) {
+      index.set(row.groupId, withCategory(existing, entry))
+    } else {
+      const group: BudgetGroup = {
+        categoryGroupId: row.groupId,
+        name: row.groupName,
+        hidden: row.groupHidden,
+        budgeted: ZERO,
+        activity: ZERO,
+        balance: ZERO,
+        categories: [],
+      }
+      index.set(row.groupId, withCategory(group, entry))
+      groups.push(group)
+    }
+  }
+
+  return {
+    month,
+    readyToAssign: current.toBeBudgeted,
+    income: current.income,
+    budgeted: current.budgeted,
+    activity: current.activity,
+    // `groups` preserves query order; `index` holds the accumulated values.
+    groups: groups.map((g) => index.get(g.categoryGroupId) ?? g),
+    months: output.months.map((m) => m.month),
+  }
+}
+
+/** Subtotals skip hidden categories, while the month's own totals do not (R15). */
+function withCategory(group: BudgetGroup, cell: BudgetCell): BudgetGroup {
+  if (cell.hidden) return { ...group, categories: [...group.categories, cell] }
+  return {
+    ...group,
+    budgeted: add(group.budgeted, cell.budgeted),
+    activity: add(group.activity, cell.activity),
+    balance: add(group.balance, cell.balance),
+    categories: [...group.categories, cell],
+  }
+}
