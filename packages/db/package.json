@@ -1,0 +1,24 @@
+{
+  "name": "@zerofold/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@zerofold/shared": "workspace:*",
+    "drizzle-orm": "^0.44.7",
+    "better-sqlite3": "^13.0.3",
+    "uuidv7": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "drizzle-kit": "^0.31.6"
+  }
+}
