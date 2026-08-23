@@ -31,6 +31,7 @@ export interface PickerOption {
 export function Picker({
   value,
   options,
+  label,
   placeholder,
   emptyText = 'Nothing matches.',
   onChange,
@@ -38,6 +39,9 @@ export function Picker({
 }: {
   value: string | null
   options: readonly PickerOption[]
+  /** Names the control for assistive technology. The visible heading above it is not associated
+   *  with this button, so without it the control announces only its current value. */
+  label: string
   placeholder: string
   emptyText?: string
   onChange: (id: string | null) => void
@@ -60,6 +64,7 @@ export function Picker({
         <Button
           variant="ghost"
           role="combobox"
+          aria-label={label}
           aria-expanded={open}
           className={cn(
             'h-8 w-full justify-between px-2 font-normal',

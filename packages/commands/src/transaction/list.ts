@@ -13,7 +13,9 @@ export interface RegisterRow {
   readonly flagColor: schema.FlagColor | null
   readonly accountId: string
   readonly accountName: string
+  readonly payeeId: string | null
   readonly payeeName: string | null
+  readonly categoryId: string | null
   readonly categoryName: string | null
   readonly isSplit: boolean
   readonly transferAccountId: string | null
@@ -93,7 +95,9 @@ export function listTransactions(db: Db, input: ListTransactionsInput): ListTran
       flagColor: schema.transaction.flagColor,
       accountId: schema.transaction.accountId,
       accountName: schema.account.name,
+      payeeId: schema.transaction.payeeId,
       payeeName: schema.payee.name,
+      categoryId: schema.transaction.categoryId,
       categoryName: schema.category.name,
       isSplit: schema.transaction.isSplit,
       transferAccountId: schema.transaction.transferAccountId,

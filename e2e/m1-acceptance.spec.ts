@@ -116,7 +116,7 @@ test.describe
     ] as const
 
     test('every account type is created with the right budget classification', async () => {
-      for (const { type, onBudget, payment } of ACCOUNT_TYPES) {
+      for (const { type, payment } of ACCOUNT_TYPES) {
         const response = await rpc(api, 'account.create', {
           planId,
           name: `Acct ${type}`,

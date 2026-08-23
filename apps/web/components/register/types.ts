@@ -12,7 +12,9 @@ export interface RegisterRow {
   readonly flagColor: FlagColor | null
   readonly accountId: string
   readonly accountName: string
+  readonly payeeId: string | null
   readonly payeeName: string | null
+  readonly categoryId: string | null
   readonly categoryName: string | null
   readonly isSplit: boolean
   readonly transferAccountId: string | null

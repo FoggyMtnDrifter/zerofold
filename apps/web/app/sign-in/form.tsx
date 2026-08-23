@@ -34,9 +34,15 @@ export function SignInForm() {
     })
     setBusy(false)
     if (result.error) {
-      // Deliberately not "no account with that email": distinguishing the two lets anyone
-      // test whether an address has an account here.
-      setError('That email and password do not match.')
+      // Being throttled is not the same as being wrong, and saying so keeps someone from
+      // retyping a password that was correct all along. Every other failure gets one message:
+      // deliberately not "no account with that email", since distinguishing the two lets
+      // anyone test whether an address has an account here.
+      setError(
+        result.error.status === 429
+          ? 'Too many attempts from here. Wait a minute, then try again.'
+          : 'That email and password do not match.',
+      )
       return
     }
     router.push('/')

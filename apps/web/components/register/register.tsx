@@ -154,6 +154,17 @@ export function Register({
 
   return (
     <div className="flex h-full flex-col">
+      {/*
+       * ARIA grid roles on divs, not a `<table>`.
+       *
+       * Virtualisation is why: only a window of rows exists in the DOM and each is absolutely
+       * positioned at a computed offset, which a table's own layout would fight. The roles carry
+       * the structure a table element would have conveyed. The rows are not tab stops by design
+       * — focus lives on the grid and the arrow keys move within it, per the ARIA grid pattern,
+       * so a 50,000-row register does not become 50,000 tab stops.
+       */}
+      {/* biome-ignore lint/a11y/useFocusableInteractive: see above — grid pattern, not tab stops */}
+      {/* biome-ignore lint/a11y/useSemanticElements: see above — virtualised rows cannot be a table */}
       <div
         role="row"
         className="flex items-center gap-2 border-b bg-surface px-3 py-1.5 text-2xs font-medium uppercase tracking-wide text-ink-subtle"
@@ -170,10 +181,11 @@ export function Register({
         <span className="w-6" />
       </div>
 
+      {/* biome-ignore lint/a11y/useSemanticElements: see above — virtualised rows cannot be a table */}
       <div
         ref={scrollRef}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the grid itself takes focus so the
-        // whole register is keyboard-operable without tabbing through thousands of rows.
+        // The grid itself takes focus so the whole register is keyboard-operable without
+        // tabbing through thousands of rows.
         tabIndex={0}
         role="grid"
         aria-rowcount={rows.length}
@@ -240,6 +252,8 @@ function Row({
   style: React.CSSProperties
 }) {
   return (
+    // biome-ignore lint/a11y/useFocusableInteractive: focus lives on the grid, not the row
+    // biome-ignore lint/a11y/useSemanticElements: virtualised rows cannot be a table
     <div
       role="row"
       aria-rowindex={rowIndex + 1}
@@ -260,7 +274,9 @@ function Row({
         <Checkbox
           checked={selected}
           onCheckedChange={() => onToggle(row.id)}
-          aria-label={`Select transaction of ${row.amount < 0n ? 'outflow' : 'inflow'} on ${row.date}`}
+          // Named by what distinguishes it from its neighbours — payee and date — rather than
+          // by its direction, which every row in a register shares with half the others.
+          aria-label={`Select ${row.payeeName ?? row.memo ?? 'transaction'} on ${row.date}`}
         />
       </span>
       <span className="w-6">

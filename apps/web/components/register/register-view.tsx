@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { type RpcResult, rpc } from '@/lib/rpc'
-import { NewTransactionRow } from './new-transaction-row'
 import type { PickerOption } from './picker'
 import { Register } from './register'
+import { TransactionForm } from './transaction-form'
 import type { RegisterRow } from './types'
 
 export interface RegisterViewProps {
@@ -34,6 +34,7 @@ export function RegisterView({
 }: RegisterViewProps) {
   const router = useRouter()
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  const [editing, setEditing] = useState<RegisterRow | null>(null)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -80,13 +81,26 @@ export function RegisterView({
 
   return (
     <div className="flex h-full flex-col">
-      <NewTransactionRow
+      {/*
+       * Keyed by the row under edit so switching rows remounts the form.
+       *
+       * The key belongs here, on the component, not on the `<form>` element inside it: an inner
+       * key resets the uncontrolled inputs but leaves the component's own state alone, which
+       * silently produced a form showing one row's memo beside another row's category.
+       */}
+      <TransactionForm
+        key={editing?.id ?? 'new'}
         planId={planId}
         accountId={accountId}
         today={today}
         payees={payees}
         categories={categories}
-        onCreated={refresh}
+        editing={editing ?? undefined}
+        onDone={() => {
+          setEditing(null)
+          refresh()
+        }}
+        onCancelEdit={() => setEditing(null)}
       />
 
       {selected.size > 0 && (
@@ -128,7 +142,12 @@ export function RegisterView({
       )}
 
       <div className="min-h-0 flex-1">
-        <Register rows={rows} selected={selected} onSelectedChange={setSelected} />
+        <Register
+          rows={rows}
+          selected={selected}
+          onSelectedChange={setSelected}
+          onActivate={setEditing}
+        />
       </div>
     </div>
   )

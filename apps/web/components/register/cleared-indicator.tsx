@@ -32,7 +32,7 @@ const STATES = {
 export function ClearedIndicator({ status }: { status: ClearedStatus }) {
   const { Icon, className, label } = STATES[status]
   return (
-    <span title={label} aria-label={label} className={className}>
+    <span role="img" title={label} aria-label={label} className={className}>
       <Icon className="size-3.5" aria-hidden />
     </span>
   )

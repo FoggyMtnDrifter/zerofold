@@ -51,9 +51,11 @@ function generate(count: number): RegisterRow[] {
       flagColor: FLAGS[Math.floor(random() * FLAGS.length)] ?? null,
       accountId: 'a1',
       accountName: 'Everyday',
+      payeeId: null,
       payeeName: isTransfer
         ? 'Transfer : Savings'
         : (PAYEES[Math.floor(random() * PAYEES.length)] ?? null),
+      categoryId: null,
       categoryName: isSplit ? null : (CATEGORIES[Math.floor(random() * CATEGORIES.length)] ?? null),
       isSplit,
       transferAccountId: isTransfer ? 'a2' : null,

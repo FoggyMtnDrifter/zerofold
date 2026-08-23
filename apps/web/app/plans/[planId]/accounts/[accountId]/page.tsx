@@ -4,6 +4,7 @@ import { and, eq, isNull, or } from 'drizzle-orm'
 import { notFound } from 'next/navigation'
 import { Money } from '@/components/money'
 import type { PickerOption } from '@/components/register/picker'
+import { ReconcileDialog } from '@/components/register/reconcile-dialog'
 import { RegisterView } from '@/components/register/register-view'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
@@ -88,21 +89,29 @@ export default async function AccountRegister({
 
   return (
     <div className="flex h-dvh flex-col">
-      <header className="border-b px-6 py-3">
-        <h1 className="text-lg font-semibold">{account.name}</h1>
-        <div className="mt-1 flex items-center gap-4 text-xs text-ink-muted">
-          <span>
-            Cleared <Money amount={totals?.clearedBalance ?? 0n} tone="neutral" />
-          </span>
-          <span aria-hidden>+</span>
-          <span>
-            Uncleared <Money amount={totals?.unclearedBalance ?? 0n} tone="neutral" />
-          </span>
-          <span aria-hidden>=</span>
-          <span className="font-medium text-ink">
-            Working <Money amount={totals?.balance ?? 0n} />
-          </span>
+      <header className="flex items-start justify-between border-b px-6 py-3">
+        <div>
+          <h1 className="text-lg font-semibold">{account.name}</h1>
+          <div className="mt-1 flex items-center gap-4 text-xs text-ink-muted">
+            <span>
+              Cleared <Money amount={totals?.clearedBalance ?? 0n} tone="neutral" />
+            </span>
+            <span aria-hidden>+</span>
+            <span>
+              Uncleared <Money amount={totals?.unclearedBalance ?? 0n} tone="neutral" />
+            </span>
+            <span aria-hidden>=</span>
+            <span className="font-medium text-ink">
+              Working <Money amount={totals?.balance ?? 0n} />
+            </span>
+          </div>
         </div>
+        <ReconcileDialog
+          planId={planId}
+          accountId={accountId}
+          clearedBalance={totals?.clearedBalance ?? 0n}
+          unclearedBalance={totals?.unclearedBalance ?? 0n}
+        />
       </header>
       <div className="min-h-0 flex-1">
         <RegisterView

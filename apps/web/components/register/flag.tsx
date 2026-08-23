@@ -18,7 +18,7 @@ const FLAG_CLASS: Record<FlagColor, string> = {
 export function FlagMark({ color }: { color: FlagColor | null }) {
   if (!color) return <span className="inline-block size-3.5" aria-hidden />
   return (
-    <span aria-label={`${color} flag`} title={`${color} flag`}>
+    <span role="img" aria-label={`${color} flag`} title={`${color} flag`}>
       <Flag className={cn('size-3.5 fill-current', FLAG_CLASS[color])} aria-hidden />
     </span>
   )
