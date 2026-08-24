@@ -1,0 +1,1 @@
+ALTER TABLE `transaction` ADD `scheduled_transaction_id` text;

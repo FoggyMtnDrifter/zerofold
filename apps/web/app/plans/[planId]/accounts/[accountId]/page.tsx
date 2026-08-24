@@ -12,6 +12,7 @@ import { Money } from '@/components/money'
 import type { PickerOption } from '@/components/register/picker'
 import { ReconcileDialog } from '@/components/register/reconcile-dialog'
 import { RegisterView } from '@/components/register/register-view'
+import { catchUp } from '@/lib/catch-up'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { todayIn } from '@/lib/today'
@@ -41,6 +42,12 @@ export default async function AccountRegister({
     .where(and(eq(schema.account.id, accountId), eq(schema.account.planId, planId)))
     .get()
   if (!plan || !account || account.deleted) notFound()
+
+  /*
+   * Before the read, deliberately: a schedule that has come due must appear in the register it
+   * was entered into, on the load that entered it.
+   */
+  catchUp(makeContext(db, user.id, todayIn(plan.timezone)), planId)
 
   const { rows } = listTransactions(db, { planId, accountId, limit: FIRST_PAGE })
   const totals = accountTotals(db, planId, accountId)

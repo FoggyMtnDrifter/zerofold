@@ -20,6 +20,13 @@ import { assign, moveMoney } from './budget/assign.ts'
 import { recompute, verify } from './budget/recompute.ts'
 import { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
 import { budgetView } from './budget/view.ts'
+import {
+  createScheduled,
+  deleteScheduled,
+  enterDueTransactions,
+  listUpcoming,
+  restoreScheduled,
+} from './scheduled/scheduled.ts'
 import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
 import { createPlan } from './plan/create-plan.ts'
 import { reconcile } from './reconcile/reconcile.ts'
@@ -411,6 +418,71 @@ export const procedures = {
     },
   }),
 
+  'scheduled.create': define({
+    input: planScoped.extend({
+      accountId: z.string().min(1),
+      date: calendarDateSchema,
+      frequency: z.enum([
+        'never',
+        'daily',
+        'weekly',
+        'everyOtherWeek',
+        'twiceAMonth',
+        'every4Weeks',
+        'monthly',
+        'everyOtherMonth',
+        'every3Months',
+        'every4Months',
+        'twiceAYear',
+        'yearly',
+        'everyOtherYear',
+      ]),
+      amount: milliunits,
+      payeeId: z.string().nullish(),
+      categoryId: z.string().nullish(),
+      memo: z.string().max(500).nullish(),
+      /** Extensions D3 — in YNAB's UI, absent from its API. */
+      endDate: calendarDateSchema.nullish(),
+      endAfterOccurrences: z.number().int().positive().nullish(),
+      autoEnter: z.boolean().optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => createScheduled(makeContext(db, userId, today), input),
+  }),
+
+  'scheduled.delete': define({
+    input: planScoped.extend({ scheduledTransactionId: z.string().min(1) }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      deleteScheduled(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'scheduled.restore': define({
+    input: planScoped.extend({ scheduledTransactionId: z.string().min(1) }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      restoreScheduled(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'scheduled.upcoming': define({
+    input: planScoped.extend({ through: calendarDateSchema }),
+    plan: 'viewer',
+    handler: ({ db, userId, today, input }) =>
+      listUpcoming(makeContext(db, userId, today), input.planId, input.through),
+  }),
+
+  /** Enter everything that has come due. Idempotent, so calling it twice is harmless. */
+  'scheduled.enterDue': define({
+    input: planScoped,
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) =>
+      enterDueTransactions(makeContext(db, userId, today), input.planId),
+  }),
+
   'account.reconcile': define({
     input: planScoped.extend({
       accountId: z.string().min(1),
@@ -439,6 +511,12 @@ const REPLAYABLE: Record<string, (ctx: CommandContext, input: unknown) => void> 
   },
   'transaction.restore': (ctx, input) => {
     restoreTransaction(ctx, procedures['transaction.restore'].input.parse(input))
+  },
+  'scheduled.delete': (ctx, input) => {
+    deleteScheduled(ctx, procedures['scheduled.delete'].input.parse(input))
+  },
+  'scheduled.restore': (ctx, input) => {
+    restoreScheduled(ctx, procedures['scheduled.restore'].input.parse(input))
   },
   'budget.assign': (ctx, input) => {
     const parsed = procedures['budget.assign'].input.parse(input)

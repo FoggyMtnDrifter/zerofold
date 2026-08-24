@@ -1,4 +1,4 @@
-import { Landmark, PieChart, Wallet } from 'lucide-react'
+import { CalendarClock, Landmark, PieChart, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AddAccountDialog } from '@/components/add-account-dialog'
@@ -62,6 +62,11 @@ export function AppShell({
 
         <nav className="flex flex-col gap-0.5 p-2" aria-label="Main">
           <NavLink icon={<Wallet className="size-4" />} label="Plan" href={`/plans/${planId}`} />
+          <NavLink
+            icon={<CalendarClock className="size-4" />}
+            label="Upcoming"
+            href={`/plans/${planId}/scheduled`}
+          />
           <NavLink icon={<PieChart className="size-4" />} label="Reflect" />
           <NavLink icon={<Landmark className="size-4" />} label="All Accounts" />
         </nav>

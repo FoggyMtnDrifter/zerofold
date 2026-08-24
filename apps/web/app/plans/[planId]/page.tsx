@@ -1,4 +1,4 @@
-import { authorizePlan, budgetView } from '@zerofold/commands'
+import { authorizePlan, budgetView, makeContext } from '@zerofold/commands'
 import { schema } from '@zerofold/db'
 import { budgetMonth } from '@zerofold/shared/date'
 import { eq } from 'drizzle-orm'
@@ -7,6 +7,7 @@ import { BudgetGrid } from '@/components/budget/budget-grid'
 import { MonthNav } from '@/components/budget/month-nav'
 import { ReadyToAssign } from '@/components/budget/ready-to-assign'
 import { Money } from '@/components/money'
+import { catchUp } from '@/lib/catch-up'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { todayIn } from '@/lib/today'
@@ -33,6 +34,7 @@ export default async function PlanBudget({
   if (!plan) notFound()
 
   const today = todayIn(plan.timezone)
+  catchUp(makeContext(db, user.id, today), planId)
   const currentMonth = budgetMonth(`${today.slice(0, 7)}-01`)
 
   /*

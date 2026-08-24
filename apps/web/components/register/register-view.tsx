@@ -43,6 +43,8 @@ export function RegisterView({
 
   const refresh = () => startTransition(() => router.refresh())
 
+  const unapproved = rows.filter((row) => !row.approved).length
+
   /**
    * Apply an action to every selected row.
    *
@@ -51,7 +53,16 @@ export function RegisterView({
    * unpredictable partial result. Stopping at the first error leaves a state the user can
    * reason about — "the first three were approved" — rather than a scattered one.
    */
-  async function applyToSelection(
+  const applyToSelection = (
+    label: string,
+    action: (
+      id: string,
+      group: { groupId: string; groupLabel: string },
+    ) => Promise<RpcResult<unknown>>,
+  ) => applyToSelectionOf([...selected], label, action)
+
+  async function applyToSelectionOf(
+    ids: readonly string[],
     label: string,
     action: (
       id: string,
@@ -59,7 +70,6 @@ export function RegisterView({
     ) => Promise<RpcResult<unknown>>,
   ) {
     setError(null)
-    const ids = [...selected]
     // One group id for the whole batch, so eleven deletions undo as one press rather than as
     // eleven. Generated here because "one user action" is a fact about this click, not about
     // any single write it performs.
@@ -85,6 +95,21 @@ export function RegisterView({
       rpc('transaction.update', { planId, transactionId, approved: true, ...group }),
     )
 
+  /**
+   * Approve everything a schedule entered.
+   *
+   * Auto-entry puts rows in front of someone rather than silently into the balance (R53), and
+   * the point of the banner is that they are *offered*. Approving in bulk is the common case —
+   * rent went out for the amount it always does — without making it the automatic one.
+   */
+  const approveEntered = () =>
+    applyToSelectionOf(
+      rows.filter((row) => !row.approved).map((row) => row.id),
+      'Approve',
+      (transactionId, group) =>
+        rpc('transaction.update', { planId, transactionId, approved: true, ...group }),
+    )
+
   const deleteSelected = () =>
     applyToSelection('Delete', (transactionId, group) =>
       rpc('transaction.delete', { planId, transactionId, ...group }),
@@ -97,6 +122,18 @@ export function RegisterView({
        * an undo may have just changed that row underneath it — leaving it open would invite
        * saving stale values straight back over the change that was reversed.
        */}
+      {unapproved > 0 && (
+        <div className="flex items-center gap-2 border-b bg-underfunded-wash px-3 py-1.5 text-xs">
+          <span className="font-medium text-ink">
+            {unapproved} {unapproved === 1 ? 'transaction' : 'transactions'} entered from a schedule
+          </span>
+          <span className="text-ink-muted">Check the details, then approve.</span>
+          <Button size="sm" variant="ghost" className="h-6" onClick={approveEntered}>
+            Approve all
+          </Button>
+        </div>
+      )}
+
       <UndoBar
         planId={planId}
         state={undo}

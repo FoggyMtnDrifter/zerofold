@@ -14,7 +14,7 @@ recorded in [`behavior/divergences.md`](behavior/divergences.md).
 | M3 | The budget engine and budget view: Ready to Assign, assignment, carryover, the month grid | **done** |
 | M4 | Credit cards: payment categories, covered and uncovered debt, cash and credit overspending | **done** |
 | M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | **done** |
-| M6 | Scheduled transactions: cadences, auto-entry, approval | not started |
+| M6 | Scheduled transactions: cadences, auto-entry, approval | **done**, except month-end |
 | M7 | Import: CSV, OFX, QIF, and migration from another budgeting app | not started |
 | M8 | Reports: spending, income, net worth, age of money | not started |
 | M9 | Compatible API, export and re-import, PWA offline | not started |
@@ -96,11 +96,35 @@ Deliberately not in M5: the target *editor* is not built — targets are set thr
 the grid shows what they need. `MF` and `DEBT` goal types remain unproduced by the oracle and
 are accepted but untested.
 
+## M6 — done, except month-end
+
+All thirteen frequencies match the measured series (R51), including the two traps: a day-delta
+between the first occurrence and the next tells you nothing unless exactly one period has
+elapsed, and `twiceAMonth` is a day-pair rather than a stride (R52).
+
+Auto-entry back-fills *every* missed occurrence rather than the latest (R53), unapproved and
+uncleared so they are offered rather than assumed. Running it again enters nothing:
+`last_entered_date` is the watermark and the whole catch-up is one transaction. A one-off is
+consumed by its own entry (R54), leaving a tombstone rather than vanishing — divergence D12.
+
+The catch-up runs in the component that reads the data, not in the layout. Next renders those
+concurrently, so a catch-up in the layout could commit after the page had already queried, which
+showed as a register missing rows it had just created on roughly one load in three.
+
+**Month-end resolution is provisional.** A monthly schedule on the 31st currently clamps to the
+last day of a shorter month and returns to the 31st when the month is long enough again. That is
+a choice, not a measurement, and it is marked as such in `recurrence.ts`, in its tests, and
+below. No fixture depends on it.
+
 ## Open behaviour questions
 
 These are measured against the oracle before the code that depends on them is written.
 
 - **P3-04c, month-end clamping.** The experiment is planted and cannot be read before
-  **2026-09-01**; `docs/behavior/_pending/p3-04c-read.mjs` reads it. Blocks part of M6. No interim
-  interpretation has been adopted.
+  **2026-09-01**; `docs/behavior/_pending/p3-04c-read.mjs` reads it. M6 ships a *provisional*
+  reading — clamp to the last day, return to the anchor day afterwards — marked as provisional
+  everywhere it appears and backed by no fixture. Read the experiment and either confirm it or
+  correct `packages/shared/src/recurrence.ts`.
+- **P3-04b, the twiceAMonth mirror case.** A day at or before the 15th is untested; the code
+  reads it as `{d, d + 15}`, which is the pairing that makes both halves the same rule.
 - **P3-02d, an exhausted FIFO queue in Age of Money.** Open, low priority. Blocks part of M8.

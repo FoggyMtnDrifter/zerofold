@@ -47,6 +47,15 @@ export const transaction = sqliteTable(
     transferPairId: ref('transfer_pair_id'),
 
     matchedTransactionId: ref('matched_transaction_id'),
+    /**
+     * The schedule that entered this row, when one did.
+     *
+     * Without it there is no way to tell an auto-entered transaction from a typed one after
+     * the fact — `approved: false` says it needs looking at, not where it came from — and no
+     * way to answer "what did this schedule create" when someone deletes it.
+     */
+    scheduledTransactionId: ref('scheduled_transaction_id'),
+
     importId: text('import_id'),
     importPayeeName: text('import_payee_name'),
     importPayeeNameOriginal: text('import_payee_name_original'),
