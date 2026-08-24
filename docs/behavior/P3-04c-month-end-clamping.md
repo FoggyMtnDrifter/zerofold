@@ -18,6 +18,45 @@ behaviours:
 They differ for roughly a third of all months, and picking wrong misplaces a recurring bill by
 a day or a month, every year, silently.
 
+## What the public record says: nothing usable (searched 2026-08-24)
+
+Before shipping M6 I looked for a documented answer rather than waiting.
+
+- **YNAB's own documentation does not cover it.** Neither the scheduled-transactions guide nor
+  the editing guide mentions short months at all.
+- **One relevant community thread exists**, "Recurring payments — Last day of month" (2018). It
+  could not be fetched directly (the host refused the connection), and two independent search
+  summaries of the same page contradicted each other — one describing a permanent drift to the
+  28th, the other saying a series that *starts* on a 31-day month "works". A pair of
+  contradictory second-hand summaries of one inaccessible page is not evidence, and the actual
+  complaint in that thread appears to be a different feature request: there is no way to express
+  "the last day of the month", as distinct from a fixed day number.
+- **The relevant standard does something different again.** RFC 5545 says recurrence instances
+  falling on invalid dates "are ignored" — so `FREQ=MONTHLY;BYMONTHDAY=31` produces *no*
+  February occurrence at all. Compliant calendar libraries skip.
+
+So all three candidate behaviours are attested somewhere in the wild, and none of it is evidence
+about *this* application. The measurement still has to be taken.
+
+## The provisional choice, and why
+
+M6 ships **clamp to the last day, anchored on the original day** — 31 Jan, 28 Feb, 31 Mar. Not
+because it is most likely, but because it fails safest while the question is open:
+
+| if we do this | and the oracle actually … | the user sees |
+|---------------|---------------------------|---------------|
+| **clamp + anchor** | skips | an extra unapproved February row — visible, one click to remove |
+| skip | clamps | a missing rent payment — invisible, and the budget understates spending |
+| clamp + drift | anchors | the bill silently walks earlier every short month — invisible and compounding |
+
+Only the first leaves a mistake the user can see. It also matches what the *domain* means:
+rent does not skip February.
+
+When P3-04c is read, if it confirms clamp-and-anchor the provisional markings come out. If it
+shows drift or skip, the choice gets weighed then with the measurement in hand — matching the
+oracle is the default, and a divergence recorded if the measured behaviour would silently
+misplace someone's rent.
+
 ## Why it cannot be read today
 
 `date_next` reports **only the next occurrence** ([R50](P3-04-05-scheduled-transactions.md)),

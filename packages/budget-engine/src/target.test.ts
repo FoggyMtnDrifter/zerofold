@@ -1,5 +1,5 @@
 import { budgetMonth, calendarDate } from '@zerofold/shared/date'
-import { milli, type Milliunits, ZERO } from '@zerofold/shared/money'
+import { type Milliunits, milli, ZERO } from '@zerofold/shared/money'
 import { describe, expect, it } from 'vitest'
 import { computeTarget, type Target, type TargetContext } from './target.ts'
 

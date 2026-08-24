@@ -2,8 +2,8 @@ import {
   addMonths,
   type BudgetMonth,
   type CalendarDate,
-  daysInMonth,
   dayOfWeek,
+  daysInMonth,
   fromParts,
   monthsBetween,
   parts,
@@ -105,10 +105,7 @@ function paymentCategory(debt: Milliunits, context: TargetContext): TargetResult
   }
 }
 
-export function computeTarget(
-  target: Target | null,
-  context: TargetContext,
-): TargetResult | null {
+export function computeTarget(target: Target | null, context: TargetContext): TargetResult | null {
   // Before `goalType`, because the requirement exists without a target (R39).
   if (context.cardDebt !== undefined) return paymentCategory(context.cardDebt, context)
   if (!target) return null
@@ -170,11 +167,7 @@ function fundedFor(target: Target, context: TargetContext): Milliunits {
  * Dated targets spread what is still missing over the months still available (R27); undated
  * repeating ones ask for their amount every period.
  */
-function monthlyDemand(
-  target: Target,
-  context: TargetContext,
-  monthsToBudget: number,
-): Milliunits {
+function monthlyDemand(target: Target, context: TargetContext, monthsToBudget: number): Milliunits {
   if (target.goalCadence === 2) {
     // Weekly: the amount is per occurrence, and the current month counts only the occurrences
     // still ahead (R29, R30). A month already half gone asks for less than it did on the 1st.
@@ -184,7 +177,10 @@ function monthlyDemand(
 
   if (target.goalTargetMonth) {
     // R27: spread the shortfall over the remaining months, ceiling to the cent.
-    return divideCeilToCent(clampToZero(sub(target.goalTarget, context.carriedForward)), monthsToBudget)
+    return divideCeilToCent(
+      clampToZero(sub(target.goalTarget, context.carriedForward)),
+      monthsToBudget,
+    )
   }
 
   return ceilToCent(target.goalTarget)

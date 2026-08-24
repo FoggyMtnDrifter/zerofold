@@ -15,6 +15,8 @@ export { assign, moveMoney } from './budget/assign.ts'
 export type { Discrepancy } from './budget/recompute.ts'
 export { recompute, verify } from './budget/recompute.ts'
 export { budgetableCategories, planMonths, snapshot } from './budget/snapshot.ts'
+export type { ClearTargetInput, SetTargetInput, SnoozeInput } from './budget/target.ts'
+export { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
 export type { BudgetCell, BudgetGroup, BudgetView } from './budget/view.ts'
 export { budgetView } from './budget/view.ts'
 export type { CommandContext, PlanWrite } from './context.ts'
@@ -27,6 +29,18 @@ export type { ProcedureInput, ProcedureName, ProcedureOutput } from './procedure
 export { isProcedureName, procedures, runProcedure } from './procedures.ts'
 export type { ReconcileInput, ReconcileResult } from './reconcile/reconcile.ts'
 export { reconcile, unclearedFor } from './reconcile/reconcile.ts'
+export type {
+  CreateScheduledInput,
+  EnterDueResult,
+  UpcomingOccurrence,
+} from './scheduled/scheduled.ts'
+export {
+  createScheduled,
+  deleteScheduled,
+  enterDueTransactions,
+  listUpcoming,
+  restoreScheduled,
+} from './scheduled/scheduled.ts'
 export type {
   CreateTransactionInput,
   CreateTransactionResult,
@@ -47,17 +61,3 @@ export type {
 export { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
 export type { UndoState } from './undo/undo.ts'
 export { undoState } from './undo/undo.ts'
-export type { ClearTargetInput, SetTargetInput, SnoozeInput } from './budget/target.ts'
-export { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
-export type {
-  CreateScheduledInput,
-  EnterDueResult,
-  UpcomingOccurrence,
-} from './scheduled/scheduled.ts'
-export {
-  createScheduled,
-  deleteScheduled,
-  enterDueTransactions,
-  listUpcoming,
-  restoreScheduled,
-} from './scheduled/scheduled.ts'

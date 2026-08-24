@@ -20,6 +20,9 @@ import { assign, moveMoney } from './budget/assign.ts'
 import { recompute, verify } from './budget/recompute.ts'
 import { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
 import { budgetView } from './budget/view.ts'
+import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
+import { createPlan } from './plan/create-plan.ts'
+import { reconcile } from './reconcile/reconcile.ts'
 import {
   createScheduled,
   deleteScheduled,
@@ -27,9 +30,6 @@ import {
   listUpcoming,
   restoreScheduled,
 } from './scheduled/scheduled.ts'
-import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
-import { createPlan } from './plan/create-plan.ts'
-import { reconcile } from './reconcile/reconcile.ts'
 import { createTransaction } from './transaction/create-transaction.ts'
 import { listTransactions } from './transaction/list.ts'
 import { deleteTransaction, restoreTransaction, updateTransaction } from './transaction/mutate.ts'
@@ -447,7 +447,8 @@ export const procedures = {
       autoEnter: z.boolean().optional(),
     }),
     plan: 'editor',
-    handler: ({ db, userId, today, input }) => createScheduled(makeContext(db, userId, today), input),
+    handler: ({ db, userId, today, input }) =>
+      createScheduled(makeContext(db, userId, today), input),
   }),
 
   'scheduled.delete': define({

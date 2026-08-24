@@ -109,10 +109,7 @@
       "indexes": {
         "auth_account_provider": {
           "name": "auth_account_provider",
-          "columns": [
-            "provider_id",
-            "account_id"
-          ],
+          "columns": ["provider_id", "account_id"],
           "isUnique": true
         }
       },
@@ -207,9 +204,7 @@
       "indexes": {
         "auth_passkey_credential": {
           "name": "auth_passkey_credential",
-          "columns": [
-            "credential_id"
-          ],
+          "columns": ["credential_id"],
           "isUnique": true
         }
       },
@@ -281,16 +276,12 @@
       "indexes": {
         "auth_session_token": {
           "name": "auth_session_token",
-          "columns": [
-            "token"
-          ],
+          "columns": ["token"],
           "isUnique": true
         },
         "auth_session_user": {
           "name": "auth_session_user",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -364,9 +355,7 @@
       "indexes": {
         "auth_user_email": {
           "name": "auth_user_email",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
@@ -424,9 +413,7 @@
       "indexes": {
         "auth_verification_identifier": {
           "name": "auth_verification_identifier",
-          "columns": [
-            "identifier"
-          ],
+          "columns": ["identifier"],
           "isUnique": false
         }
       },
@@ -616,18 +603,12 @@
       "indexes": {
         "account_plan": {
           "name": "account_plan",
-          "columns": [
-            "plan_id",
-            "sort_order"
-          ],
+          "columns": ["plan_id", "sort_order"],
           "isUnique": false
         },
         "account_knowledge": {
           "name": "account_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         }
       },
@@ -747,26 +728,17 @@
       "indexes": {
         "category_group_idx": {
           "name": "category_group_idx",
-          "columns": [
-            "plan_id",
-            "category_group_id",
-            "sort_order"
-          ],
+          "columns": ["plan_id", "category_group_id", "sort_order"],
           "isUnique": false
         },
         "category_credit_account": {
           "name": "category_credit_account",
-          "columns": [
-            "credit_account_id"
-          ],
+          "columns": ["credit_account_id"],
           "isUnique": true
         },
         "category_knowledge": {
           "name": "category_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         }
       },
@@ -858,10 +830,7 @@
       "indexes": {
         "category_group_plan": {
           "name": "category_group_plan",
-          "columns": [
-            "plan_id",
-            "sort_order"
-          ],
+          "columns": ["plan_id", "sort_order"],
           "isUnique": false
         }
       },
@@ -994,19 +963,12 @@
       "indexes": {
         "category_target_revision": {
           "name": "category_target_revision",
-          "columns": [
-            "plan_id",
-            "category_id",
-            "effective_from_month"
-          ],
+          "columns": ["plan_id", "category_id", "effective_from_month"],
           "isUnique": true
         },
         "category_target_category": {
           "name": "category_target_category",
-          "columns": [
-            "plan_id",
-            "category_id"
-          ],
+          "columns": ["plan_id", "category_id"],
           "isUnique": false
         }
       },
@@ -1096,19 +1058,13 @@
       "indexes": {
         "payee_name_unique": {
           "name": "payee_name_unique",
-          "columns": [
-            "plan_id",
-            "name"
-          ],
+          "columns": ["plan_id", "name"],
           "isUnique": true,
           "where": "\"payee\".\"deleted\" = 0 AND \"payee\".\"transfer_account_id\" IS NULL AND \"payee\".\"internal_kind\" IS NULL"
         },
         "payee_knowledge": {
           "name": "payee_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         }
       },
@@ -1219,11 +1175,7 @@
       "indexes": {
         "reconciliation_account": {
           "name": "reconciliation_account",
-          "columns": [
-            "plan_id",
-            "account_id",
-            "reconciled_at"
-          ],
+          "columns": ["plan_id", "account_id", "reconciled_at"],
           "isUnique": false
         }
       },
@@ -1498,18 +1450,12 @@
       "indexes": {
         "scheduled_next": {
           "name": "scheduled_next",
-          "columns": [
-            "plan_id",
-            "date_next"
-          ],
+          "columns": ["plan_id", "date_next"],
           "isUnique": false
         },
         "scheduled_knowledge": {
           "name": "scheduled_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         }
       },
@@ -1599,10 +1545,7 @@
       "indexes": {
         "sched_exception_unique": {
           "name": "sched_exception_unique",
-          "columns": [
-            "scheduled_transaction_id",
-            "occurrence_date"
-          ],
+          "columns": ["scheduled_transaction_id", "occurrence_date"],
           "isUnique": true
         }
       },
@@ -1728,10 +1671,7 @@
       "indexes": {
         "subtransaction_parent": {
           "name": "subtransaction_parent",
-          "columns": [
-            "transaction_id",
-            "sort_order"
-          ],
+          "columns": ["transaction_id", "sort_order"],
           "isUnique": false
         }
       },
@@ -1950,53 +1890,32 @@
       "indexes": {
         "transaction_register": {
           "name": "transaction_register",
-          "columns": [
-            "plan_id",
-            "account_id",
-            "date",
-            "id"
-          ],
+          "columns": ["plan_id", "account_id", "date", "id"],
           "isUnique": false
         },
         "transaction_date": {
           "name": "transaction_date",
-          "columns": [
-            "plan_id",
-            "date"
-          ],
+          "columns": ["plan_id", "date"],
           "isUnique": false
         },
         "transaction_category": {
           "name": "transaction_category",
-          "columns": [
-            "plan_id",
-            "category_id",
-            "date"
-          ],
+          "columns": ["plan_id", "category_id", "date"],
           "isUnique": false
         },
         "transaction_knowledge": {
           "name": "transaction_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         },
         "transaction_pair": {
           "name": "transaction_pair",
-          "columns": [
-            "transfer_pair_id"
-          ],
+          "columns": ["transfer_pair_id"],
           "isUnique": false
         },
         "transaction_import_unique": {
           "name": "transaction_import_unique",
-          "columns": [
-            "plan_id",
-            "account_id",
-            "import_id"
-          ],
+          "columns": ["plan_id", "account_id", "import_id"],
           "isUnique": true,
           "where": "\"transaction\".\"import_id\" IS NOT NULL AND \"transaction\".\"deleted\" = 0"
         }
@@ -2099,19 +2018,12 @@
       "indexes": {
         "money_movement_month": {
           "name": "money_movement_month",
-          "columns": [
-            "plan_id",
-            "month",
-            "moved_at"
-          ],
+          "columns": ["plan_id", "month", "moved_at"],
           "isUnique": false
         },
         "money_movement_knowledge": {
           "name": "money_movement_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         }
       },
@@ -2291,10 +2203,7 @@
       "indexes": {
         "month_pk": {
           "name": "month_pk",
-          "columns": [
-            "plan_id",
-            "month"
-          ],
+          "columns": ["plan_id", "month"],
           "isUnique": true
         }
       },
@@ -2446,19 +2355,12 @@
       "indexes": {
         "month_category_pk": {
           "name": "month_category_pk",
-          "columns": [
-            "plan_id",
-            "month",
-            "category_id"
-          ],
+          "columns": ["plan_id", "month", "category_id"],
           "isUnique": true
         },
         "month_category_knowledge": {
           "name": "month_category_knowledge",
-          "columns": [
-            "plan_id",
-            "knowledge_at_change"
-          ],
+          "columns": ["plan_id", "knowledge_at_change"],
           "isUnique": false
         }
       },
@@ -2546,16 +2448,12 @@
       "indexes": {
         "api_token_hash": {
           "name": "api_token_hash",
-          "columns": [
-            "token_hash"
-          ],
+          "columns": ["token_hash"],
           "isUnique": true
         },
         "api_token_user": {
           "name": "api_token_user",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -2641,17 +2539,12 @@
       "indexes": {
         "audit_event_plan": {
           "name": "audit_event_plan",
-          "columns": [
-            "plan_id",
-            "at"
-          ],
+          "columns": ["plan_id", "at"],
           "isUnique": false
         },
         "audit_event_user": {
           "name": "audit_event_user",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -2754,19 +2647,12 @@
       "indexes": {
         "external_id_pk": {
           "name": "external_id_pk",
-          "columns": [
-            "plan_id",
-            "entity_type",
-            "external_system",
-            "external_id"
-          ],
+          "columns": ["plan_id", "entity_type", "external_system", "external_id"],
           "isUnique": true
         },
         "external_id_internal": {
           "name": "external_id_internal",
-          "columns": [
-            "internal_id"
-          ],
+          "columns": ["internal_id"],
           "isUnique": false
         }
       },
@@ -2901,10 +2787,7 @@
       "indexes": {
         "import_batch_plan": {
           "name": "import_batch_plan",
-          "columns": [
-            "plan_id",
-            "created_at"
-          ],
+          "columns": ["plan_id", "created_at"],
           "isUnique": false
         }
       },
@@ -3098,16 +2981,12 @@
       "indexes": {
         "invite_token": {
           "name": "invite_token",
-          "columns": [
-            "token_hash"
-          ],
+          "columns": ["token_hash"],
           "isUnique": true
         },
         "invite_email": {
           "name": "invite_email",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": false
         }
       },
@@ -3312,18 +3191,12 @@
       "indexes": {
         "undo_entry_stack": {
           "name": "undo_entry_stack",
-          "columns": [
-            "plan_id",
-            "user_id",
-            "seq"
-          ],
+          "columns": ["plan_id", "user_id", "seq"],
           "isUnique": false
         },
         "undo_entry_group": {
           "name": "undo_entry_group",
-          "columns": [
-            "group_id"
-          ],
+          "columns": ["group_id"],
           "isUnique": false
         }
       },
@@ -3367,10 +3240,7 @@
       "indexes": {
         "carry_checkpoint_pk": {
           "name": "carry_checkpoint_pk",
-          "columns": [
-            "plan_id",
-            "month"
-          ],
+          "columns": ["plan_id", "month"],
           "isUnique": true
         }
       },
@@ -3524,17 +3394,12 @@
       "indexes": {
         "plan_membership_pk": {
           "name": "plan_membership_pk",
-          "columns": [
-            "plan_id",
-            "user_id"
-          ],
+          "columns": ["plan_id", "user_id"],
           "isUnique": true
         },
         "plan_membership_user": {
           "name": "plan_membership_user",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },

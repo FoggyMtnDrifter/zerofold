@@ -44,7 +44,10 @@ afterEach(() => h.close())
 /** A context whose today is a later date, for stepping the clock without touching the data. */
 const on = (date: string) => makeContext(h.db, 'user-1', calendarDate(date), `${date}T12:00:00Z`)
 
-const schedule = (frequency: Parameters<typeof createScheduled>[1]['frequency'], date = '2026-08-16') =>
+const schedule = (
+  frequency: Parameters<typeof createScheduled>[1]['frequency'],
+  date = '2026-08-16',
+) =>
   createScheduled(h.ctx, {
     planId,
     accountId: checking,
@@ -278,8 +281,8 @@ describe('R20 — a schedule changes nothing until it is entered', () => {
     })
 
     const activity = () =>
-      listTransactions(h.db, { planId, accountId: checking, limit: 500 }).rows
-        .filter((r) => r.categoryId === groceries)
+      listTransactions(h.db, { planId, accountId: checking, limit: 500 })
+        .rows.filter((r) => r.categoryId === groceries)
         .reduce((total, r) => (total + r.amount) as typeof ZERO, ZERO)
 
     expect(activity()).toBe(ZERO)

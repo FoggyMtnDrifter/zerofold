@@ -122,8 +122,10 @@ These are measured against the oracle before the code that depends on them is wr
 
 - **P3-04c, month-end clamping.** The experiment is planted and cannot be read before
   **2026-09-01**; `docs/behavior/_pending/p3-04c-read.mjs` reads it. M6 ships a *provisional*
-  reading — clamp to the last day, return to the anchor day afterwards — marked as provisional
-  everywhere it appears and backed by no fixture. Read the experiment and either confirm it or
+  reading — clamp to the last day, return to the anchor day afterwards — chosen because it is the
+  only one of the three candidates whose mistakes are visible if it is wrong, marked as
+  provisional everywhere it appears and backed by no fixture. Searching the public record found
+  all three behaviours attested elsewhere and nothing authoritative about this application. Read the experiment and either confirm it or
   correct `packages/shared/src/recurrence.ts`.
 - **P3-04b, the twiceAMonth mirror case.** A day at or before the 15th is untested; the code
   reads it as `{d, d + 15}`, which is the pairing that makes both halves the same rule.

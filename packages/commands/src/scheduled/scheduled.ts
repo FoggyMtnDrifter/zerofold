@@ -178,8 +178,7 @@ function enterDue(ctx: CommandContext, planId: string, through: CalendarDate): E
     }
 
     const last =
-      capped.at(-1) ??
-      (scheduled.lastEnteredDate ? calendarDate(scheduled.lastEnteredDate) : null)
+      capped.at(-1) ?? (scheduled.lastEnteredDate ? calendarDate(scheduled.lastEnteredDate) : null)
     const next = last ? nextOccurrence(last, scheduled.frequency) : calendarDate(scheduled.dateNext)
 
     withPlanWrite(ctx, planId, (write) => {

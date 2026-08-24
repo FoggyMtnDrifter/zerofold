@@ -1,11 +1,4 @@
-import {
-  addDays,
-  type CalendarDate,
-  compare,
-  daysInMonth,
-  fromParts,
-  parts,
-} from './date.ts'
+import { addDays, type CalendarDate, compare, daysInMonth, fromParts, parts } from './date.ts'
 
 /**
  * Recurrence, as calendar arithmetic.
@@ -56,9 +49,19 @@ const MONTH_STRIDE: Partial<Record<Frequency, number>> = {
  * and the register projects only the next occurrence. The experiment that settles it is planted
  * and cannot be read before **2026-09-01** — see `docs/behavior/P3-04c-month-end-clamping.md`.
  *
- * Clamping to the last day is what most calendars do and what a person expecting rent on the
- * 31st would least mind, so it is what happens here until the measurement lands. It is marked
- * here, in the doc, and in the open-questions list rather than being quietly assumed, and no
+ * Searching for a documented answer found all three candidate behaviours attested somewhere and
+ * none of them for this application: YNAB's own docs are silent, the one community thread on it
+ * is unreachable and summarised two contradictory ways, and RFC 5545 does a third thing again —
+ * it *skips* an invalid date rather than coercing it.
+ *
+ * So this clamps because it fails safest, not because it is most likely. If the oracle turns out
+ * to skip, clamping shows an extra unapproved row in February — visible, one click to remove. If
+ * we skipped and it clamps, a rent payment goes missing and nothing says so. And drifting, the
+ * third option, would walk a bill permanently earlier with no sign at all. Only one of the three
+ * makes its own mistakes visible. It also matches what the domain means: rent does not skip
+ * February.
+ *
+ * Marked here, in the doc, and in the open-questions list rather than quietly assumed, and no
  * golden fixture depends on it.
  */
 function addMonthsClamped(date: CalendarDate, months: number): CalendarDate {

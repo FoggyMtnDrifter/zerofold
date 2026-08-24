@@ -43,8 +43,7 @@ const categoryId = (name: string) =>
     .where(and(eq(schema.category.planId, planId), eq(schema.category.name, name)))
     .get()?.id ?? ''
 
-const view = (month = AUG) =>
-  budgetView(h.db, planId, month, AUG, calendarDate(TODAY))
+const view = (month = AUG) => budgetView(h.db, planId, month, AUG, calendarDate(TODAY))
 
 const cell = (name: string, month = AUG) =>
   view(month)
@@ -139,7 +138,11 @@ describe('revisions', () => {
 
     expect(cell('Groceries')?.target?.underFunded).toBe(milli(250_000))
     expect(
-      h.db.select().from(schema.categoryTarget).where(eq(schema.categoryTarget.planId, planId)).all(),
+      h.db
+        .select()
+        .from(schema.categoryTarget)
+        .where(eq(schema.categoryTarget.planId, planId))
+        .all(),
     ).toHaveLength(1)
   })
 

@@ -11,12 +11,14 @@
  */
 export { advance, type CardDebt, type CarryState, emptyCarry, totalBudgeted } from './advance.ts'
 export { type EngineOutput, readyToAssign, run } from './run.ts'
+export type { Cadence, GoalType, Target, TargetContext, TargetResult } from './target.ts'
+export { computeTarget } from './target.ts'
 export type {
   Assignment,
-  CategoryTarget,
   CardEvent,
   CardInput,
   CardResult,
+  CategoryTarget,
   CellResult,
   EngineInput,
   LedgerEntry,
@@ -24,8 +26,5 @@ export type {
   MonthResult,
   OverspendKind,
 } from './types.ts'
-
-export type { Cadence, GoalType, Target, TargetContext, TargetResult } from './target.ts'
-export { computeTarget } from './target.ts'
 
 export const ENGINE_VERSION = '1.0.0'
