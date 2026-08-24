@@ -16,6 +16,7 @@
     "drizzle-orm": "^0.44.7",
     "uuidv7": "^1.0.2",
     "zod": "^4.4.3",
-    "@zerofold/budget-engine": "workspace:*"
+    "@zerofold/budget-engine": "workspace:*",
+    "@zerofold/importers": "workspace:*"
   }
 }

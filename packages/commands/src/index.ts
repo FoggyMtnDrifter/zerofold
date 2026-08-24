@@ -21,6 +21,15 @@ export type { BudgetCell, BudgetGroup, BudgetView } from './budget/view.ts'
 export { budgetView } from './budget/view.ts'
 export type { CommandContext, PlanWrite } from './context.ts'
 export { CommandError, makeContext, PlanNotFoundError, withPlanWrite } from './context.ts'
+export type {
+  CommitInput,
+  CommitResult,
+  ImportPreview,
+  MatchReason,
+  PreviewInput,
+  PreviewRow,
+} from './import/import.ts'
+export { commitImport, importIdFor, previewImport } from './import/import.ts'
 export type { CreatePlanInput, CreatePlanResult } from './plan/create-plan.ts'
 export { createPlan } from './plan/create-plan.ts'
 export type { RegistrationDecision } from './plan/registration.ts'

@@ -7,11 +7,13 @@ import {
 } from '@zerofold/commands'
 import { schema } from '@zerofold/db'
 import { and, eq, isNull, or } from 'drizzle-orm'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Money } from '@/components/money'
 import type { PickerOption } from '@/components/register/picker'
 import { ReconcileDialog } from '@/components/register/reconcile-dialog'
 import { RegisterView } from '@/components/register/register-view'
+import { Button } from '@/components/ui/button'
 import { catchUp } from '@/lib/catch-up'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
@@ -120,6 +122,9 @@ export default async function AccountRegister({
             </span>
           </div>
         </div>
+        <Button variant="ghost" size="sm" asChild>
+          <Link href={`/plans/${planId}/accounts/${accountId}/import`}>Import</Link>
+        </Button>
         <ReconcileDialog
           planId={planId}
           accountId={accountId}

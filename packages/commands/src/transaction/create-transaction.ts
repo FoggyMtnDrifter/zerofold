@@ -27,6 +27,10 @@ export interface CreateTransactionInput {
   readonly subtransactions?: readonly SubtransactionInput[] | undefined
   /** Set when a schedule entered this row, so it can be traced back to its series. */
   readonly scheduledTransactionId?: string | null | undefined
+  /** Set when an import created this row, so a batch can be reviewed or undone as a unit. */
+  readonly importBatchId?: string | null | undefined
+  /** The payee exactly as the file wrote it, before any cleaning. */
+  readonly importPayeeName?: string | null | undefined
   /** Folds this write into an existing undo step, so a bulk action undoes as one. */
   readonly groupId?: string | undefined
   /** What the undo control should say, when a caller is performing one action as many writes. */
@@ -127,9 +131,9 @@ function insert(
       matchedTransactionId: null,
       importId: input.importId ?? null,
       scheduledTransactionId: input.scheduledTransactionId ?? null,
-      importPayeeName: null,
-      importPayeeNameOriginal: null,
-      importBatchId: null,
+      importPayeeName: input.importPayeeName ?? null,
+      importPayeeNameOriginal: input.importPayeeName ?? null,
+      importBatchId: input.importBatchId ?? null,
       debtTransactionType: null,
       isSplit,
       reconciliationId: null,

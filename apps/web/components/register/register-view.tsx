@@ -124,10 +124,19 @@ export function RegisterView({
        */}
       {unapproved > 0 && (
         <div className="flex items-center gap-2 border-b bg-underfunded-wash px-3 py-1.5 text-xs">
+          {/*
+           * Deliberately not "from a schedule".
+           *
+           * Auto-entry used to be the only thing that created unapproved rows; importing does
+           * too now, and the banner counts both. Naming one source would be wrong half the time
+           * — and the reader's next action is the same either way: look, then approve.
+           */}
           <span className="font-medium text-ink">
-            {unapproved} {unapproved === 1 ? 'transaction' : 'transactions'} entered from a schedule
+            {unapproved} {unapproved === 1 ? 'transaction' : 'transactions'} to review
           </span>
-          <span className="text-ink-muted">Check the details, then approve.</span>
+          <span className="text-ink-muted">
+            Entered automatically. Check the details, then approve.
+          </span>
           <Button size="sm" variant="ghost" className="h-6" onClick={approveEntered}>
             Approve all
           </Button>

@@ -111,6 +111,9 @@ importers:
       '@zerofold/db':
         specifier: workspace:*
         version: link:../db
+      '@zerofold/importers':
+        specifier: workspace:*
+        version: link:../importers
       '@zerofold/shared':
         specifier: workspace:*
         version: link:../shared

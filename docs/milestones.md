@@ -15,7 +15,7 @@ recorded in [`behavior/divergences.md`](behavior/divergences.md).
 | M4 | Credit cards: payment categories, covered and uncovered debt, cash and credit overspending | **done** |
 | M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | **done** |
 | M6 | Scheduled transactions: cadences, auto-entry, approval | **done**, except month-end |
-| M7 | Import: CSV, OFX, QIF, and migration from another budgeting app | not started |
+| M7 | Import: CSV, OFX, QIF, and migration from another budgeting app | **partly** — file import done, plan migration not started |
 | M8 | Reports: spending, income, net worth, age of money | not started |
 | M9 | Compatible API, export and re-import, PWA offline | not started |
 
@@ -115,6 +115,26 @@ showed as a register missing rows it had just created on roughly one load in thr
 last day of a shorter month and returns to the 31st when the month is long enough again. That is
 a choice, not a measurement, and it is marked as such in `recurrence.ts`, in its tests, and
 below. No fixture depends on it.
+
+## M7 — file import done, plan migration not started
+
+Three formats behind one seam. A format adapter implements `FeedImporter` and is added to one
+list; everything downstream — duplicate matching, payee handling, the review screen — never
+learns how many there are or what they read. Adding a bank's peculiar CSV costs one file.
+
+The parsers are written against what banks actually emit rather than the happy path: unclosed
+SGML tags in OFX 1.x, quoted commas and European decimals in CSV, ambiguous QIF dates settled by
+scanning the file for one row that can only be read one way. Format is sniffed from content, not
+from the extension, because a bank serving QFX as `.qbo` is ordinary.
+
+Duplicate detection is two-tier and *offered rather than applied*: an institution's own
+identifier is conclusive, and same-amount-within-three-days is a guess that pre-ticks a checkbox
+the user can overrule. Re-importing an overlapping range — the normal way people import — brings
+in only what is new.
+
+**Still to do:** whole-plan migration from another budgeting app, over the canonical
+intermediate representation that `plan/` is reserved for. That is the same document as the
+native export format, so it lands with M9's export rather than separately.
 
 ## Open behaviour questions
 

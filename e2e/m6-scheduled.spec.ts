@@ -107,7 +107,7 @@ test.describe
       // The catch-up runs when the plan is rendered, not on a timer.
       await page.goto(`/plans/${planId}/accounts/${accountId}`)
 
-      const banner = page.getByText(/entered from a schedule/)
+      const banner = page.getByText(/to review/)
       await expect(banner).toBeVisible()
       // Four days: three missed plus today.
       await expect(banner).toContainText('4 transactions')
@@ -116,13 +116,13 @@ test.describe
     test('loading the page again enters nothing more', async () => {
       const rowsBefore = await page.getByRole('row').count()
       await page.goto(`/plans/${planId}/accounts/${accountId}`)
-      await expect(page.getByText(/entered from a schedule/)).toBeVisible()
+      await expect(page.getByText(/to review/)).toBeVisible()
       expect(await page.getByRole('row').count()).toBe(rowsBefore)
     })
 
     test('approving them clears the banner', async () => {
       await page.getByRole('button', { name: 'Approve all' }).click()
-      await expect(page.getByText(/entered from a schedule/)).toBeHidden()
+      await expect(page.getByText(/to review/)).toBeHidden()
     })
   })
 

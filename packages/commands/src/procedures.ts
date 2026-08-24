@@ -21,6 +21,7 @@ import { recompute, verify } from './budget/recompute.ts'
 import { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
 import { budgetView } from './budget/view.ts'
 import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
+import { commitImport, previewImport } from './import/import.ts'
 import { createPlan } from './plan/create-plan.ts'
 import { reconcile } from './reconcile/reconcile.ts'
 import {
@@ -482,6 +483,80 @@ export const procedures = {
     plan: 'editor',
     handler: ({ db, userId, today, input }) =>
       enterDueTransactions(makeContext(db, userId, today), input.planId),
+  }),
+
+  /**
+   * Read a file and report what it holds, without writing anything.
+   *
+   * The content arrives as text rather than as an upload because the file never needs to leave
+   * the request: parsing costs less than storing, and a self-hosted instance has no business
+   * keeping a copy of someone's bank statement on disk.
+   */
+  'import.preview': define({
+    input: planScoped.extend({
+      accountId: z.string().min(1),
+      content: z.string().min(1).max(20_000_000),
+      filename: z.string().max(255).optional(),
+      columns: z
+        .object({
+          date: z.number().int().min(0),
+          payee: z.number().int().min(0).optional(),
+          memo: z.number().int().min(0).optional(),
+          amount: z.number().int().min(0).optional(),
+          outflow: z.number().int().min(0).optional(),
+          inflow: z.number().int().min(0).optional(),
+        })
+        .optional(),
+      dateOrder: z.enum(['dmy', 'mdy']).optional(),
+    }),
+    plan: 'viewer',
+    handler: ({ db, input }) => {
+      const preview = previewImport(db, {
+        planId: input.planId,
+        accountId: input.accountId,
+        content: input.content,
+        ...(input.filename === undefined ? {} : { filename: input.filename }),
+        options: {
+          ...(input.columns === undefined ? {} : { columns: input.columns }),
+          ...(input.dateOrder === undefined ? {} : { dateOrder: input.dateOrder }),
+        },
+      })
+      // Milliunits are bigint; JSON is not.
+      return { ...preview, rows: preview.rows.map((r) => ({ ...r, amount: r.amount.toString() })) }
+    },
+  }),
+
+  'import.commit': define({
+    input: planScoped.extend({
+      accountId: z.string().min(1),
+      content: z.string().min(1).max(20_000_000),
+      filename: z.string().max(255).optional(),
+      acceptImportIds: z.array(z.string().min(1)).max(50_000),
+      columns: z
+        .object({
+          date: z.number().int().min(0),
+          payee: z.number().int().min(0).optional(),
+          memo: z.number().int().min(0).optional(),
+          amount: z.number().int().min(0).optional(),
+          outflow: z.number().int().min(0).optional(),
+          inflow: z.number().int().min(0).optional(),
+        })
+        .optional(),
+      dateOrder: z.enum(['dmy', 'mdy']).optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) =>
+      commitImport(makeContext(db, userId, today), {
+        planId: input.planId,
+        accountId: input.accountId,
+        content: input.content,
+        ...(input.filename === undefined ? {} : { filename: input.filename }),
+        acceptImportIds: input.acceptImportIds,
+        options: {
+          ...(input.columns === undefined ? {} : { columns: input.columns }),
+          ...(input.dateOrder === undefined ? {} : { dateOrder: input.dateOrder }),
+        },
+      }),
   }),
 
   'account.reconcile': define({
