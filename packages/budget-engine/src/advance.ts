@@ -1,5 +1,11 @@
 import type { CalendarDate } from '@zerofold/shared/date'
 import { add, clampToZero, type Milliunits, min, neg, sub, ZERO } from '@zerofold/shared/money'
+import {
+  advanceAgeOfMoney,
+  ageOfMoney,
+  type AgeOfMoneyState,
+  emptyAgeOfMoney,
+} from './age-of-money.ts'
 import { computeTarget } from './target.ts'
 import type {
   CardEvent,
@@ -22,6 +28,13 @@ import type {
  * as a constant rather than accumulated.
  */
 export interface CarryState {
+  /**
+   * The FIFO queue behind Age of Money, and the window of recent ages.
+   *
+   * Carried rather than recomputed because an August figure can depend on June income (R65);
+   * it cannot be derived from one month's slice.
+   */
+  readonly aom: AgeOfMoneyState
   /** Available carried into the month, per category. Absent means zero. */
   readonly balances: ReadonlyMap<string, Milliunits>
   /** Debt per card, split by whether a category ever funded it. See `CardResult`. */
@@ -49,6 +62,7 @@ export interface CardDebt {
 const NO_DEBT: CardDebt = { covered: ZERO, uncovered: ZERO }
 
 export const emptyCarry = (totalBudgetedAllMonths: Milliunits): CarryState => ({
+  aom: emptyAgeOfMoney(),
   balances: new Map(),
   cards: new Map(),
   cumulativeIncome: ZERO,
@@ -344,6 +358,23 @@ export function advance(
   const cumulativeIncome = add(state.cumulativeIncome, input.income)
   const uncoveredPaidTotal = add(state.uncoveredPaid, uncoveredPaid)
 
+  /*
+   * Age of Money sees income arriving and money *leaving*, which is not the same as spending.
+   *
+   * A card purchase creates debt and moves nothing, so it does not count; paying the card is
+   * when money leaves and that is the event the metric wants (R68). So the events are cash
+   * spending and card payments, never card charges.
+   */
+  const aom = advanceAgeOfMoney(state.aom, [
+    ...(input.income > ZERO ? [{ date: incomeDate(input), amount: input.income }] : []),
+    ...input.entries
+      .filter((entry) => entry.isCash && entry.amount < ZERO)
+      .map((entry) => ({ date: entry.date, amount: entry.amount })),
+    ...input.cardEvents
+      .filter((event) => event.amount > ZERO)
+      .map((event) => ({ date: event.date, amount: -event.amount as Milliunits })),
+  ])
+
   return {
     result: {
       month: input.month,
@@ -356,6 +387,7 @@ export function advance(
         sub(sub(cumulativeIncome, state.totalBudgetedAllMonths), state.cashOverspendBefore),
         uncoveredPaidTotal,
       ),
+      ageOfMoney: ageOfMoney(aom),
       cells,
       cards: cardsInput.map((card): CardResult => {
         const debt = cards.get(card.accountId) ?? NO_DEBT
@@ -368,6 +400,7 @@ export function advance(
       }),
     },
     next: {
+      aom,
       balances,
       cards,
       cumulativeIncome,
@@ -390,3 +423,13 @@ export function totalBudgeted(months: readonly MonthInput[]): Milliunits {
 /** What a card owes in total: what the budget has funded, plus what it has not. */
 const outstanding = (debt: CardDebt | undefined): Milliunits =>
   debt ? (add(debt.covered, debt.uncovered) as Milliunits) : ZERO
+
+/**
+ * When a month's income is treated as having arrived.
+ *
+ * The engine receives income as one figure per month rather than per transaction, so the
+ * queue needs a date for it. The first of the month is the conservative choice: it makes money
+ * look no younger than it is, and the alternative — the month's end — would flatter every
+ * figure by up to thirty days.
+ */
+const incomeDate = (input: MonthInput): CalendarDate => input.month

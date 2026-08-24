@@ -130,6 +130,8 @@ export interface MonthResult {
   readonly activity: Milliunits
   /** Ready to Assign, as of this month. R8. */
   readonly toBeBudgeted: Milliunits
+  /** Null below the ten-spend floor — which is not the same as zero (R65). */
+  readonly ageOfMoney: number | null
   readonly cells: readonly CellResult[]
   readonly cards: readonly CardResult[]
 }

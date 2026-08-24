@@ -67,7 +67,11 @@ export function AppShell({
             label="Upcoming"
             href={`/plans/${planId}/scheduled`}
           />
-          <NavLink icon={<PieChart className="size-4" />} label="Reflect" />
+          <NavLink
+            icon={<PieChart className="size-4" />}
+            label="Reflect"
+            href={`/plans/${planId}/reflect`}
+          />
           <NavLink icon={<Landmark className="size-4" />} label="All Accounts" />
         </nav>
 

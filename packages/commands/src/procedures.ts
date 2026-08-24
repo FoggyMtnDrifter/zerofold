@@ -22,6 +22,7 @@ import { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
 import { budgetView } from './budget/view.ts'
 import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
 import { commitImport, previewImport } from './import/import.ts'
+import { incomeReport, netWorthReport, spendingReport } from './reports/reports.ts'
 import { createPlan } from './plan/create-plan.ts'
 import { reconcile } from './reconcile/reconcile.ts'
 import {
@@ -557,6 +558,51 @@ export const procedures = {
           ...(input.dateOrder === undefined ? {} : { dateOrder: input.dateOrder }),
         },
       }),
+  }),
+
+  'report.spending': define({
+    input: planScoped.extend({ from: monthSchema, through: monthSchema }),
+    plan: 'viewer',
+    handler: ({ db, input }) => {
+      const report = spendingReport(db, input.planId, input)
+      return {
+        ...report,
+        total: report.total.toString(),
+        byCategory: report.byCategory.map((c) => ({ ...c, amount: c.amount.toString() })),
+        byMonth: report.byMonth.map((m) => ({ ...m, amount: m.amount.toString() })),
+      }
+    },
+  }),
+
+  'report.income': define({
+    input: planScoped.extend({ from: monthSchema, through: monthSchema }),
+    plan: 'viewer',
+    handler: ({ db, input }) => {
+      const report = incomeReport(db, input.planId, input)
+      return {
+        period: report.period,
+        totalIncome: report.totalIncome.toString(),
+        totalSpending: report.totalSpending.toString(),
+        byMonth: report.byMonth.map((m) => ({
+          month: m.month,
+          income: m.income.toString(),
+          spending: m.spending.toString(),
+          net: m.net.toString(),
+        })),
+      }
+    },
+  }),
+
+  'report.netWorth': define({
+    input: planScoped.extend({ from: monthSchema, through: monthSchema }),
+    plan: 'viewer',
+    handler: ({ db, input }) =>
+      netWorthReport(db, input.planId, input).map((p) => ({
+        month: p.month,
+        assets: p.assets.toString(),
+        liabilities: p.liabilities.toString(),
+        net: p.net.toString(),
+      })),
   }),
 
   'account.reconcile': define({

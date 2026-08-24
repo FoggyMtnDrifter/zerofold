@@ -70,3 +70,11 @@ export type {
 export { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
 export type { UndoState } from './undo/undo.ts'
 export { undoState } from './undo/undo.ts'
+export type {
+  CategoryTotal,
+  IncomeReport,
+  NetWorthPoint,
+  Period,
+  SpendingReport,
+} from './reports/reports.ts'
+export { incomeReport, netWorthReport, spendingReport } from './reports/reports.ts'

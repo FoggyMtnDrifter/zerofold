@@ -68,6 +68,8 @@ export interface BudgetView {
    * is a bug that only appears once a plan has a snoozed category in it.
    */
   readonly underfunded: Milliunits
+  /** Null below the ten-spend floor, which means "not enough history", not "zero days". */
+  readonly ageOfMoney: number | null
 }
 
 /**
@@ -190,6 +192,7 @@ export function budgetView(
   return {
     month,
     underfunded,
+    ageOfMoney: current.ageOfMoney,
     readyToAssign: current.toBeBudgeted,
     income: current.income,
     budgeted: current.budgeted,

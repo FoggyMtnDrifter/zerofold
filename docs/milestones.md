@@ -16,7 +16,7 @@ recorded in [`behavior/divergences.md`](behavior/divergences.md).
 | M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | **done** |
 | M6 | Scheduled transactions: cadences, auto-entry, approval | **done**, except month-end |
 | M7 | Import: CSV, OFX, QIF, and migration from another budgeting app | **partly** — file import done, plan migration not started |
-| M8 | Reports: spending, income, net worth, age of money | not started |
+| M8 | Reports: spending, income, net worth, age of money | **done** |
 | M9 | Compatible API, export and re-import, PWA offline | not started |
 
 ## M1 — done
@@ -136,6 +136,27 @@ in only what is new.
 intermediate representation that `plan/` is reserved for. That is the same document as the
 native export format, so it lands with M9's export rather than separately.
 
+## M8 — done
+
+Age of Money is a FIFO queue over income consumed by spending in date order, averaged over the
+last ten spends. Three parts of that a reasonable implementation gets wrong: it is the mean and
+not the median, matching is oldest-income-first rather than most-recent, and it rounds half up —
+a third rounding rule distinct from the two the targets use. A card *purchase* is not spending;
+the card *payment* is (R68).
+
+The open question about an exhausted queue was closed by experiment rather than assumption
+(R70): unmatched spending takes age zero and stays in the window, so the figure collapses
+towards zero as a plan overspends. Skipping it would have reported a *healthier* age the worse
+things got.
+
+The three reports read the ledger rather than the budget cache, and an e2e test asserts net
+worth agrees with the balances the sidebar shows — a report that quietly disagrees with the rest
+of the application is worse than no report.
+
+Deliberately not in M8: no date-range picker; the reports show a fixed trailing twelve months.
+Bars rather than charts — a ranked list of totals does not need axes, and one rectangle cannot
+disagree with the number printed beside it.
+
 ## Open behaviour questions
 
 These are measured against the oracle before the code that depends on them is written.
@@ -149,4 +170,5 @@ These are measured against the oracle before the code that depends on them is wr
   correct `packages/shared/src/recurrence.ts`.
 - **P3-04b, the twiceAMonth mirror case.** A day at or before the 15th is untested; the code
   reads it as `{d, d + 15}`, which is the pairing that makes both halves the same rule.
-- **P3-02d, an exhausted FIFO queue in Age of Money.** Open, low priority. Blocks part of M8.
+- ~~**P3-02d, an exhausted FIFO queue in Age of Money.**~~ **Resolved 2026-08-24** as R70:
+  unmatched spending takes age zero and stays in the ten-transaction window.

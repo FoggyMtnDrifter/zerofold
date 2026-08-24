@@ -27,4 +27,7 @@ export type {
   OverspendKind,
 } from './types.ts'
 
+export type { AgeOfMoneyEvent, AgeOfMoneyState } from './age-of-money.ts'
+export { advanceAgeOfMoney, ageOfMoney, emptyAgeOfMoney, MINIMUM_SPENDS } from './age-of-money.ts'
+
 export const ENGINE_VERSION = '1.0.0'

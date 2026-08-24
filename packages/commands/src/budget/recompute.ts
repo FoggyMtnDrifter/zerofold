@@ -47,7 +47,7 @@ function writeCache(
         budgeted: month.budgeted,
         activity: month.activity,
         toBeBudgeted: month.toBeBudgeted,
-        ageOfMoney: null,
+        ageOfMoney: month.ageOfMoney,
         knowledgeAtChange: write.knowledge,
       })
       .onConflictDoUpdate({
@@ -57,6 +57,7 @@ function writeCache(
           budgeted: month.budgeted,
           activity: month.activity,
           toBeBudgeted: month.toBeBudgeted,
+          ageOfMoney: month.ageOfMoney,
           knowledgeAtChange: write.knowledge,
         },
       })

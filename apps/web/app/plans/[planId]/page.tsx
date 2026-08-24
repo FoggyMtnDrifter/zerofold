@@ -79,6 +79,23 @@ export default async function PlanBudget({
               <Money amount={view.activity} tone="neutral" />
             </dd>
           </div>
+          <div>
+            <dt className="text-2xs uppercase tracking-wide">Age of money</dt>
+            <dd
+              title={
+                view.ageOfMoney === null
+                  ? 'Ten spending transactions are needed before this means anything.'
+                  : 'How long, on average, money sits between arriving and being spent.'
+              }
+            >
+              {/* Null is "not enough history", not "zero days", and saying zero would lie. */}
+              {view.ageOfMoney === null ? (
+                <span className="text-ink-subtle">not yet</span>
+              ) : (
+                `${view.ageOfMoney} ${view.ageOfMoney === 1 ? 'day' : 'days'}`
+              )}
+            </dd>
+          </div>
           {/* biome-ignore lint/a11y/useSemanticElements: a fieldset implies a form; this is a readout */}
           <div role="group" aria-label="Underfunded">
             <dt className="text-2xs uppercase tracking-wide">Underfunded</dt>

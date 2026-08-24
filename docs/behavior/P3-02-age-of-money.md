@@ -103,20 +103,42 @@ between earning and spending it"* — and with [R60′](P1-07-paying-a-credit-ca
 uncovered debt is what draws on Ready to Assign. Both rules treat the payment, not the purchase,
 as the moment money actually leaves.
 
-### Open — an exhausted FIFO queue
+### R70 — Spending with no income left to match takes age zero, and stays in the window
 
-At the point the payments were made, cumulative spending already equalled cumulative income, so
-the three payments had no income left to match against, and the resulting figure implies they
-were assigned an age near **zero**. Whether unmatched spending takes age 0, is skipped, or
-consumes some other bucket is **not determined** — the experiment was not built to separate
-those. **Follow-up P3-02d**, and it matters: a plan that has spent more than it has earned is
-not an unusual state.
+**Resolved by P3-02d** (constructed, 2026-08-24). P3-02c could not separate "age 0" from
+"skipped" because its three payments were too few to move the mean far either way.
+
+The discriminating design makes the funded ages large and the unfunded ones many: income
+100000 on 2026-01-01, then fifteen spends of 10000 on 2026-08-01…08-15. Exactly ten are funded,
+with ages 212…221; five are not.
+
+| rule | last ten | predicted |
+|------|----------|-----------|
+| unmatched counts as age 0 | 217, 218, 219, 220, 221, 0, 0, 0, 0, 0 | **110** |
+| unmatched skipped | 212 … 221 | 217 |
+
+**Observed: 110.**
+
+Confirmed by a second prediction the two rules disagree on. Five more unfunded spends puts all
+ten of the window beyond the income, so age-0 predicts exactly **0** while skipping still
+predicts 217. **Observed: 0.**
+
+Predicted 110 and observed 110; predicted 0 and observed 0. Two agreements in opposite
+directions is not a coincidence.
+
+> The reading is coherent: money you did not have cannot have sat anywhere, so it has no age.
+> The metric is not undefined when a plan overspends — it collapses towards zero, which is a
+> fair description of the situation.
+
+**Engine consequence:** the FIFO queue must not be allowed to go negative, and a spend that
+finds it empty contributes `0` to the window rather than being skipped. An implementation that
+skipped would report a *healthier* age the more a plan overspent, which is exactly backwards.
 
 ## Engine consequences
 
 1. AoM needs a **FIFO queue over income**, consumed by spending in date order — this is the
    `aom.fifo` field already reserved in `CarryState` (plan §4). It now has a defined
-   consumption rule.
+   consumption rule, including what an exhausted queue does (R70).
 2. The queue must persist across months, since the August figure depends on June income. It
    cannot be computed from a single month's slice, and it must survive the gap-jump
    optimisation — an empty month neither adds to nor consumes the queue, so the transform stays
