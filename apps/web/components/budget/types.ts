@@ -1,4 +1,13 @@
 /** The budget grid as the server hands it over. Mirrors `BudgetView` from the command layer. */
+export interface TargetResult {
+  readonly underFunded: bigint
+  readonly monthsToBudget: number
+  readonly overallFunded: bigint
+  readonly overallLeft: bigint
+  readonly percentageComplete: number
+  readonly targetSnapshot: bigint
+}
+
 export interface CardState {
   readonly accountId: string
   readonly coveredDebt: bigint
@@ -15,6 +24,8 @@ export interface BudgetCell {
   readonly activity: bigint
   readonly balance: bigint
   readonly overspendKind: 'none' | 'cash' | 'credit'
+  readonly target: TargetResult | null
+  readonly snoozed: boolean
 }
 
 export interface BudgetGroup {
@@ -35,4 +46,5 @@ export interface BudgetView {
   readonly activity: bigint
   readonly groups: readonly BudgetGroup[]
   readonly months: readonly string[]
+  readonly underfunded: bigint
 }

@@ -42,9 +42,15 @@ export default async function PlanBudget({
    */
   let view: ReturnType<typeof budgetView>
   try {
-    view = budgetView(db, planId, requested ? budgetMonth(requested) : currentMonth, currentMonth)
+    view = budgetView(
+      db,
+      planId,
+      requested ? budgetMonth(requested) : currentMonth,
+      currentMonth,
+      today,
+    )
   } catch {
-    view = budgetView(db, planId, currentMonth, currentMonth)
+    view = budgetView(db, planId, currentMonth, currentMonth, today)
   }
 
   return (
@@ -69,6 +75,16 @@ export default async function PlanBudget({
             <dt className="text-2xs uppercase tracking-wide">Activity</dt>
             <dd>
               <Money amount={view.activity} tone="neutral" />
+            </dd>
+          </div>
+          {/* biome-ignore lint/a11y/useSemanticElements: a fieldset implies a form; this is a readout */}
+          <div role="group" aria-label="Underfunded">
+            <dt className="text-2xs uppercase tracking-wide">Underfunded</dt>
+            <dd>
+              <Money
+                amount={view.underfunded}
+                {...(view.underfunded === 0n ? { tone: 'neutral' as const } : {})}
+              />
             </dd>
           </div>
         </dl>

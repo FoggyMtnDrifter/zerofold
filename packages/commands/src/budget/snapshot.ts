@@ -2,9 +2,11 @@ import type {
   Assignment,
   CardEvent,
   CardInput,
+  CategoryTarget,
   EngineInput,
   LedgerEntry,
   MonthInput,
+  Target,
 } from '@zerofold/budget-engine'
 import type { Db } from '@zerofold/db'
 import { schema } from '@zerofold/db'
@@ -12,6 +14,7 @@ import {
   addMonths,
   type BudgetMonth,
   budgetMonth,
+  type CalendarDate,
   calendarDate,
   monthsBetween,
 } from '@zerofold/shared/date'
@@ -276,6 +279,53 @@ export function budgetableCategories(db: Db, planId: string): readonly string[] 
     .map((r) => r.id)
 }
 
+/**
+ * The target in force for each category, per month.
+ *
+ * Targets are stored as revisions with an `effective_from_month` (divergence D2) rather than
+ * one mutable record, so that editing a target today cannot silently rewrite what a past month
+ * "needed". This resolves, for each month, the newest revision effective at or before it —
+ * which is what makes a historical month reproducible and the golden fixtures meaningful.
+ */
+function targetsByMonth(
+  db: Db,
+  planId: string,
+  months: readonly BudgetMonth[],
+): Map<string, CategoryTarget[]> {
+  const revisions = db
+    .select()
+    .from(schema.categoryTarget)
+    .where(and(eq(schema.categoryTarget.planId, planId), eq(schema.categoryTarget.deleted, false)))
+    .orderBy(schema.categoryTarget.effectiveFromMonth)
+    .all()
+
+  const out = new Map<string, CategoryTarget[]>()
+  for (const month of months) {
+    const effective = new Map<string, (typeof revisions)[number]>()
+    for (const revision of revisions) {
+      // Ordered ascending, so the last one at or before this month wins.
+      if (revision.effectiveFromMonth <= month) effective.set(revision.categoryId, revision)
+    }
+
+    out.set(
+      month,
+      [...effective.values()].map((r) => ({
+        categoryId: r.categoryId,
+        target: {
+          goalType: r.goalType,
+          goalTarget: milli(r.goalTarget ?? 0n),
+          goalTargetMonth: r.goalTargetMonth ? budgetMonth(r.goalTargetMonth) : null,
+          goalDay: r.goalDay,
+          goalCadence: (r.goalCadence ?? null) as Target['goalCadence'],
+          goalNeedsWholeAmount: r.goalNeedsWholeAmount,
+          repeats: r.repeats,
+        },
+      })),
+    )
+  }
+  return out
+}
+
 /** The credit accounts and the payment category each one projects into the budget. */
 export function planCards(db: Db, planId: string): readonly CardInput[] {
   return db
@@ -297,8 +347,15 @@ export function planCards(db: Db, planId: string): readonly CardInput[] {
 
 const monthOf = (date: string) => `${date.slice(0, 7)}-01`
 
-export function snapshot(db: Db, planId: string, today: BudgetMonth): EngineInput {
+export function snapshot(
+  db: Db,
+  planId: string,
+  today: BudgetMonth,
+  /** The plan's actual date. Weekly targets decay through the month (R30). */
+  todayDate: CalendarDate = calendarDate(`${today.slice(0, 8)}01`),
+): EngineInput {
   const months = planMonths(db, planId, today)
+  const targets = targetsByMonth(db, planId, months)
   const income = incomeByMonth(db, planId)
   const assignments = assignmentsByMonth(db, planId)
 
@@ -319,6 +376,7 @@ export function snapshot(db: Db, planId: string, today: BudgetMonth): EngineInpu
   }
 
   return {
+    today: todayDate,
     categories: budgetableCategories(db, planId),
     cards: planCards(db, planId),
     months: months.map(
@@ -328,6 +386,7 @@ export function snapshot(db: Db, planId: string, today: BudgetMonth): EngineInpu
         assignments: assignments.get(month) ?? [],
         entries: entries.get(month) ?? [],
         cardEvents: events.get(month) ?? [],
+        targets: targets.get(month) ?? [],
       }),
     ),
   }

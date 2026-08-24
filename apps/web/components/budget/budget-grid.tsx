@@ -89,6 +89,7 @@ export function BudgetGrid({ planId, view }: { planId: string; view: BudgetView 
         className="flex items-center gap-2 border-b bg-surface px-4 py-1.5 text-2xs font-medium uppercase tracking-wide text-ink-subtle"
       >
         <span className="flex-1">Category</span>
+        <span className="w-40">Target</span>
         <span className="w-32 text-right">Assigned</span>
         <span className="w-32 text-right">Activity</span>
         <span className="w-32 text-right">Available</span>
@@ -128,6 +129,7 @@ export function BudgetGrid({ planId, view }: { planId: string; view: BudgetView 
                   )}
                   {group.name}
                 </button>
+                <span className="w-40" />
                 <Money amount={group.budgeted} className="w-32 text-right" tone="neutral" />
                 <Money amount={group.activity} className="w-32 text-right" tone="neutral" />
                 <Money amount={group.balance} className="w-32 text-right" />
@@ -152,6 +154,8 @@ export function BudgetGrid({ planId, view }: { planId: string; view: BudgetView 
                       {category.hidden && <span className="text-2xs">(hidden)</span>}
                       {category.card && <CardNote card={category.card} />}
                     </span>
+
+                    <TargetCell category={category} />
 
                     <AssignedCell
                       label={`Assigned to ${category.name}`}
@@ -212,6 +216,54 @@ function AssignedCell({
       }}
       className="h-7 w-32 text-right tabular-nums"
     />
+  )
+}
+
+/**
+ * What this category's target still wants this month.
+ *
+ * Snoozed categories say so instead of nagging: the need is unchanged and still readable, it
+ * just stops asking (R32). A category with no target shows nothing at all rather than a zero —
+ * "no target" and "a target of nothing" are different states and the grid should not blur them.
+ */
+function TargetCell({
+  category,
+}: {
+  category: BudgetView['groups'][number]['categories'][number]
+}) {
+  const target = category.target
+  if (!target || (target.targetSnapshot === 0n && target.underFunded === 0n)) {
+    return <span className="w-40" />
+  }
+
+  if (category.snoozed) {
+    return (
+      <span className="w-40 text-2xs text-ink-subtle" title="Snoozed for this month.">
+        snoozed
+      </span>
+    )
+  }
+
+  if (target.underFunded === 0n) {
+    return (
+      <span className="w-40 text-2xs text-positive" title="Fully funded for this month.">
+        funded
+      </span>
+    )
+  }
+
+  return (
+    <span className="flex w-40 items-center gap-1.5" title={`${target.percentageComplete}% funded`}>
+      <span className="h-1 w-10 shrink-0 overflow-hidden rounded-full bg-hairline" aria-hidden>
+        <span
+          className="block h-full rounded-full bg-brand"
+          style={{ width: `${Math.min(100, target.percentageComplete)}%` }}
+        />
+      </span>
+      <span className="truncate text-2xs text-ink-muted">
+        <Money amount={target.underFunded} tone="neutral" /> more
+      </span>
+    </span>
   )
 }
 

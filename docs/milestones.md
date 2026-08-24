@@ -13,7 +13,7 @@ recorded in [`behavior/divergences.md`](behavior/divergences.md).
 | M2 | The register: virtualised at 50,000 rows, entry, editing, bulk actions, reconciliation, undo/redo | **done** |
 | M3 | The budget engine and budget view: Ready to Assign, assignment, carryover, the month grid | **done** |
 | M4 | Credit cards: payment categories, covered and uncovered debt, cash and credit overspending | **done** |
-| M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | not started |
+| M5 | Targets: the full goal set, recalculation, rounding, snooze and rollover | **done** |
 | M6 | Scheduled transactions: cadences, auto-entry, approval | not started |
 | M7 | Import: CSV, OFX, QIF, and migration from another budgeting app | not started |
 | M8 | Reports: spending, income, net worth, age of money | not started |
@@ -73,6 +73,28 @@ Visa 120000 / Amex 50000 split — which is how R7 was found to be wrong.
 
 Deliberately not in M4: the credit-card payment *target* (R39, an implicit funding requirement
 equal to the card balance) belongs with targets in M5.
+
+## M5 — done
+
+Every target formula is measured, and two were measured wrong the first time — so both blind
+spots are covered deliberately: every by-date case is tested funded *and* unfunded, and never
+only in its final month.
+
+Set aside counts what you put in; fill up to counts what was already there (R25), and they part
+company the month after funding, before anything is spent. By-date targets spread what is still
+missing over the months still available, subtracting this month's assignment *after* the ceiling
+(R27, R28). The two rounding rules point opposite ways on purpose — needed ceils, progress
+floors (R28, R34) — so neither ever flatters the user. Weekly targets decay through the month
+(R30); repeating ones roll forward past their due month while non-repeating ones go quiet
+(R31, R35). Snooze changes one aggregate and no arithmetic (R32, R33). A credit-card payment
+category is underfunded by its balance with no target at all (R39).
+
+Targets are stored as revisions keyed by the month they take effect from (divergence D2), so
+editing one today cannot rewrite what a past month needed.
+
+Deliberately not in M5: the target *editor* is not built — targets are set through the API, and
+the grid shows what they need. `MF` and `DEBT` goal types remain unproduced by the oracle and
+are accepted but untested.
 
 ## Open behaviour questions
 

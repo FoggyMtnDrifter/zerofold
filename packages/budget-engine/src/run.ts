@@ -20,7 +20,7 @@ export function run(input: EngineInput): EngineOutput {
   const months: MonthResult[] = []
 
   for (const month of input.months) {
-    const step = advance(state, month, input.categories, input.cards)
+    const step = advance(state, month, input.categories, input.cards, input.today)
     months.push(step.result)
     state = step.next
   }

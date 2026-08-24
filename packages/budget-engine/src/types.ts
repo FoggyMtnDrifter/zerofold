@@ -1,5 +1,6 @@
 import type { BudgetMonth, CalendarDate } from '@zerofold/shared/date'
 import type { Milliunits } from '@zerofold/shared/money'
+import type { Target, TargetResult } from './target.ts'
 
 /**
  * One categorised transaction.
@@ -42,6 +43,12 @@ export interface Assignment {
   readonly budgeted: Milliunits
 }
 
+/** The target in force for a category, already resolved to the revision effective this month. */
+export interface CategoryTarget {
+  readonly categoryId: string
+  readonly target: Target
+}
+
 export interface MonthInput {
   readonly month: BudgetMonth
   /**
@@ -54,6 +61,7 @@ export interface MonthInput {
   readonly assignments: readonly Assignment[]
   readonly entries: readonly LedgerEntry[]
   readonly cardEvents: readonly CardEvent[]
+  readonly targets: readonly CategoryTarget[]
 }
 
 /** A credit account, as the engine needs to know it. */
@@ -64,6 +72,8 @@ export interface CardInput {
 }
 
 export interface EngineInput {
+  /** The plan's today. Weekly targets are a function of it (R30); nothing else is. */
+  readonly today: CalendarDate
   /**
    * Every category the plan has, excluding Inflow: Ready to Assign — payment categories
    * included, since they hold money and appear in the grid.
@@ -98,6 +108,8 @@ export interface CellResult {
   readonly cashOverspend: Milliunits
   /** Overspending that only increased debt. Costs nothing until the card is paid (R61). */
   readonly creditOverspend: Milliunits
+  /** Null when the category has no target — which is not the same as a target of zero. */
+  readonly target: TargetResult | null
 }
 
 /** What a card owes, split by whether the budget has already funded it. */

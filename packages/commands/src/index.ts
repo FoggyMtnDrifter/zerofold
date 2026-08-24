@@ -47,3 +47,5 @@ export type {
 export { deleteTransaction, updateTransaction } from './transaction/mutate.ts'
 export type { UndoState } from './undo/undo.ts'
 export { undoState } from './undo/undo.ts'
+export type { ClearTargetInput, SetTargetInput, SnoozeInput } from './budget/target.ts'
+export { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'

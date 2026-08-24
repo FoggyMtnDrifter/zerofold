@@ -1,9 +1,9 @@
-import { run } from '@zerofold/budget-engine'
+import { run, type TargetResult } from '@zerofold/budget-engine'
 import type { Db } from '@zerofold/db'
 import { schema } from '@zerofold/db'
-import type { BudgetMonth } from '@zerofold/shared/date'
+import type { BudgetMonth, CalendarDate } from '@zerofold/shared/date'
 import { add, type Milliunits, ZERO } from '@zerofold/shared/money'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, isNotNull } from 'drizzle-orm'
 import { CommandError } from '../context.ts'
 import { snapshot } from './snapshot.ts'
 
@@ -30,6 +30,14 @@ export interface BudgetCell {
   readonly activity: Milliunits
   readonly balance: Milliunits
   readonly overspendKind: 'none' | 'cash' | 'credit'
+  readonly target: TargetResult | null
+  /**
+   * Set when the user has silenced this category's target for this month.
+   *
+   * It suppresses the nag and excludes the category from the Underfunded total, and changes
+   * nothing about the target math (R32, R33). Snooze hides the fact, it does not alter it.
+   */
+  readonly snoozed: boolean
 }
 
 export interface BudgetGroup {
@@ -52,6 +60,14 @@ export interface BudgetView {
   readonly activity: Milliunits
   readonly groups: readonly BudgetGroup[]
   readonly months: readonly BudgetMonth[]
+  /**
+   * What every target still wants this month.
+   *
+   * Excludes snoozed categories, and *only* this aggregate does — the "cost to be me" total
+   * counts them (R33). Two different aggregations over the same rows, and reusing one for both
+   * is a bug that only appears once a plan has a snoozed category in it.
+   */
+  readonly underfunded: Milliunits
 }
 
 /**
@@ -68,8 +84,10 @@ export function budgetView(
   planId: string,
   month: BudgetMonth,
   today: BudgetMonth,
+  /** The plan's actual date, not just its month — a weekly target decays through it (R30). */
+  todayDate?: CalendarDate,
 ): BudgetView {
-  const input = snapshot(db, planId, today)
+  const input = snapshot(db, planId, today, todayDate)
   const output = run(input)
 
   const current = output.months.find((m) => m.month === month)
@@ -81,6 +99,21 @@ export function budgetView(
   }
 
   const cells = new Map(current.cells.map((cell) => [cell.categoryId, cell]))
+
+  const snoozed = new Set(
+    db
+      .select({ categoryId: schema.monthCategory.categoryId })
+      .from(schema.monthCategory)
+      .where(
+        and(
+          eq(schema.monthCategory.planId, planId),
+          eq(schema.monthCategory.month, month),
+          isNotNull(schema.monthCategory.goalSnoozedAt),
+        ),
+      )
+      .all()
+      .map((r) => r.categoryId),
+  )
 
   const rows = db
     .select({
@@ -124,6 +157,8 @@ export function budgetView(
       activity: cell?.activity ?? ZERO,
       balance: cell?.balance ?? ZERO,
       overspendKind: cell?.overspendKind ?? 'none',
+      target: cell?.target ?? null,
+      snoozed: snoozed.has(row.categoryId),
     }
 
     const existing = index.get(row.groupId)
@@ -144,8 +179,17 @@ export function budgetView(
     }
   }
 
+  let underfunded = ZERO
+  for (const group of groups) {
+    for (const category of index.get(group.categoryGroupId)?.categories ?? []) {
+      if (category.snoozed) continue
+      underfunded = add(underfunded, category.target?.underFunded ?? ZERO)
+    }
+  }
+
   return {
     month,
+    underfunded,
     readyToAssign: current.toBeBudgeted,
     income: current.income,
     budgeted: current.budgeted,

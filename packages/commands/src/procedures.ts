@@ -18,6 +18,7 @@ import {
 import { authorizePlan, type Role } from './authorize.ts'
 import { assign, moveMoney } from './budget/assign.ts'
 import { recompute, verify } from './budget/recompute.ts'
+import { clearTarget, setTarget, snoozeTarget } from './budget/target.ts'
 import { budgetView } from './budget/view.ts'
 import { type CommandContext, CommandError, makeContext, replaying } from './context.ts'
 import { createPlan } from './plan/create-plan.ts'
@@ -360,6 +361,53 @@ export const procedures = {
           computed: typeof d.computed === 'bigint' ? d.computed.toString() : d.computed,
         })),
       }
+    },
+  }),
+
+  'target.set': define({
+    input: planScoped.extend({
+      categoryId: z.string().min(1),
+      effectiveFrom: monthSchema,
+      goalType: z.enum(['NEED', 'TB', 'TBD', 'MF', 'DEBT']),
+      goalTarget: milliunits,
+      goalTargetMonth: monthSchema.nullish(),
+      /** 0 = Sunday (R29). */
+      goalDay: z.number().int().min(0).max(6).nullish(),
+      /** 1 monthly, 2 weekly, 13 yearly (R31a). */
+      goalCadence: z.union([z.literal(1), z.literal(2), z.literal(13)]).nullish(),
+      /** `true` = set aside, `false` = fill up to (R25). */
+      goalNeedsWholeAmount: z.boolean().nullish(),
+      repeats: z.boolean().optional(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      setTarget(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'target.clear': define({
+    input: planScoped.extend({
+      categoryId: z.string().min(1),
+      effectiveFrom: monthSchema,
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      clearTarget(makeContext(db, userId, today), input)
+      return { ok: true as const }
+    },
+  }),
+
+  'target.snooze': define({
+    input: planScoped.extend({
+      categoryId: z.string().min(1),
+      month: monthSchema,
+      snoozed: z.boolean(),
+    }),
+    plan: 'editor',
+    handler: ({ db, userId, today, input }) => {
+      snoozeTarget(makeContext(db, userId, today), input)
+      return { ok: true as const }
     },
   }),
 

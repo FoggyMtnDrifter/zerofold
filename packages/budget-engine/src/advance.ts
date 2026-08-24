@@ -1,4 +1,6 @@
 import { add, clampToZero, type Milliunits, min, neg, sub, ZERO } from '@zerofold/shared/money'
+import type { CalendarDate } from '@zerofold/shared/date'
+import { computeTarget } from './target.ts'
 import type {
   CardEvent,
   CardInput,
@@ -220,7 +222,9 @@ export function advance(
   input: MonthInput,
   categories: readonly string[],
   cardsInput: readonly CardInput[],
+  today: CalendarDate,
 ): { readonly result: MonthResult; readonly next: CarryState } {
+  const targets = new Map(input.targets.map((t) => [t.categoryId, t.target]))
   const assigned = new Map(input.assignments.map((a) => [a.categoryId, a.budgeted]))
   const byCategory = new Map<string, LedgerEntry[]>()
   for (const entry of input.entries) {
@@ -274,6 +278,12 @@ export function advance(
         cell.cashOverspend > ZERO ? 'cash' : cell.creditOverspend > ZERO ? 'credit' : 'none',
       cashOverspend: cell.cashOverspend,
       creditOverspend: cell.creditOverspend,
+      target: computeTarget(targets.get(categoryId) ?? null, {
+        month: input.month,
+        carriedForward,
+        budgeted: assigned.get(categoryId) ?? ZERO,
+        today,
+      }),
     })
   }
 
@@ -302,6 +312,19 @@ export function advance(
         overspendKind: 'none',
         cashOverspend: ZERO,
         creditOverspend: ZERO,
+        /*
+         * A payment category is underfunded by what its card owes, with or without a target
+         * (R39). The debt is read after the card events and coverage have been applied, so it
+         * is the balance as of the end of this month — which is what "pay off your current
+         * balance" means to the person reading it.
+         */
+        target: computeTarget(targets.get(categoryId) ?? null, {
+          month: input.month,
+          carriedForward,
+          budgeted: cellBudgeted,
+          today,
+          cardDebt: outstanding(cards.get(cardId)),
+        }),
       }
     }
 
@@ -363,3 +386,7 @@ export function totalBudgeted(months: readonly MonthInput[]): Milliunits {
   }
   return total
 }
+
+/** What a card owes in total: what the budget has funded, plus what it has not. */
+const outstanding = (debt: CardDebt | undefined): Milliunits =>
+  debt ? (add(debt.covered, debt.uncovered) as Milliunits) : ZERO

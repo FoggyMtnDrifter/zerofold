@@ -62,6 +62,7 @@ const plan = (
   oct: MonthSpec = {},
   cards: EngineInput['cards'] = [],
 ): EngineInput => ({
+  today: DAY,
   categories: [...CATEGORIES, ...cards.map((c) => c.paymentCategoryId)],
   cards,
   months: [
@@ -77,6 +78,7 @@ const month = (m: typeof AUG, spec: MonthSpec): MonthInput => ({
   assignments: spec.assignments ?? [],
   entries: spec.entries ?? [],
   cardEvents: spec.cardEvents ?? [],
+  targets: [],
 })
 
 const rta = (input: EngineInput) => run(input).months.map((m) => m.toBeBudgeted)
@@ -320,6 +322,7 @@ describe('P1-03 end to end', () => {
   const CATS = ['Groceries', 'Dining out', 'Entertainment', 'Vacation', 'Stuff'] as const
 
   const input: EngineInput = {
+    today: DAY,
     categories: [...CATS, 'pay-visa', 'pay-amex'],
     cards: [VISA, AMEX],
     months: [
@@ -348,6 +351,7 @@ describe('P1-03 end to end', () => {
           spend('Stuff', -20_000, { card: 'visa', id: 'a576fe9e' }),
         ],
         cardEvents: [cardEvent('visa', 100_000)],
+        targets: [],
       },
     ],
   }
@@ -415,7 +419,7 @@ describe('the closed form and the fold agree', () => {
     let running = emptyCarry(0n as Milliunits)
     for (const [i, m] of input.months.entries()) {
       if (i > index) break
-      const step = advance(running, m, input.categories, input.cards)
+      const step = advance(running, m, input.categories, input.cards, input.today)
       uncoveredPaid = step.next.uncoveredPaid
       running = step.next
     }
@@ -464,10 +468,10 @@ describe('the fold can be resumed', () => {
     let state = emptyCarry(totalBudgeted(input.months))
     const first = input.months[0]
     if (!first) throw new Error('unreachable')
-    state = advance(state, first, input.categories, input.cards).next
+    state = advance(state, first, input.categories, input.cards, input.today).next
 
     const tail = input.months.slice(1).map((m) => {
-      const step = advance(state, m, input.categories, input.cards)
+      const step = advance(state, m, input.categories, input.cards, input.today)
       state = step.next
       return step.result
     })

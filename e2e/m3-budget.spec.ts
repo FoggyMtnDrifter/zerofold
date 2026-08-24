@@ -106,6 +106,69 @@ test.describe
       })
       expect(await response.json()).toMatchObject({ data: { ok: true, discrepancies: [] } })
     })
+
+    test('a target says what the month still needs, and funding it says so', async () => {
+      const health = await categoryNamed('Health')
+
+      // $400 a month, set aside. Nothing assigned yet, so it wants the whole amount.
+      await rpc('target.set', {
+        planId: planIdOf(),
+        categoryId: health,
+        effectiveFrom: '2026-08-01',
+        goalType: 'NEED',
+        goalTarget: '400000',
+        goalCadence: 1,
+        goalNeedsWholeAmount: true,
+      })
+
+      await page.reload()
+      await expect(page.getByRole('row').filter({ hasText: 'Health' })).toContainText(
+        '$400.00 more',
+      )
+
+      await cell('Health').fill('400')
+      await cell('Health').press('Enter')
+      await expect(page.getByRole('row').filter({ hasText: 'Health' })).toContainText('funded')
+    })
+
+    test('snoozing hides the nag without changing the need (R32, R33)', async () => {
+      const hobbies = await categoryNamed('Hobbies')
+
+      await rpc('target.set', {
+        planId: planIdOf(),
+        categoryId: hobbies,
+        effectiveFrom: '2026-08-01',
+        goalType: 'NEED',
+        goalTarget: '50000',
+        goalCadence: 1,
+        goalNeedsWholeAmount: true,
+      })
+      await page.reload()
+      await expect(page.getByRole('row').filter({ hasText: 'Hobbies' })).toContainText(
+        '$50.00 more',
+      )
+
+      const before = await underfunded()
+      await rpc('target.snooze', {
+        planId: planIdOf(),
+        categoryId: hobbies,
+        month: '2026-08-01',
+        snoozed: true,
+      })
+      await page.reload()
+
+      await expect(page.getByRole('row').filter({ hasText: 'Hobbies' })).toContainText('snoozed')
+      // Out of the total, and the need itself untouched — two aggregates, one of them blind.
+      expect(await underfunded()).toBe(before - 50_000n)
+
+      const view = await (
+        await rpc('budget.view', { planId: planIdOf(), month: '2026-08-01' })
+      ).json()
+      const row = view.data.groups
+        .flatMap((g: { categories: TargetRow[] }) => g.categories)
+        .find((c: TargetRow) => c.name === 'Hobbies')
+      expect(row?.target?.underFunded).toBe('50000')
+    })
   })
 
 /** The header figure, in milliunits, read back off the page. */
@@ -119,3 +182,41 @@ async function readyToAssign(): Promise<bigint> {
 }
 
 const available = (name: string) => page.getByRole('gridcell', { name: `Available in ${name}` })
+
+interface TargetRow {
+  name: string
+  categoryId: string
+  target: { underFunded: string } | null
+}
+
+const planIdOf = () => new URL(page.url()).pathname.split('/')[2] ?? ''
+
+const rpc = (procedure: string, data: unknown) =>
+  page.request.post(`/api/rpc/${procedure}`, {
+    data,
+    headers: { origin: new URL(page.url()).origin },
+  })
+
+/** A category's id, by the name shown in the grid. */
+async function categoryNamed(name: string): Promise<string> {
+  const view = await (await rpc('budget.view', { planId: planIdOf(), month: '2026-08-01' })).json()
+  const found = view.data.groups
+    .flatMap((g: { categories: TargetRow[] }) => g.categories)
+    .find((c: TargetRow) => c.name === name)
+  if (!found) throw new Error(`no category named ${name}`)
+  return found.categoryId
+}
+
+/** The header's underfunded total, in milliunits. */
+async function underfunded(): Promise<bigint> {
+  const text = await page.getByRole('group', { name: 'Underfunded' }).innerText()
+  return parseMoney(text)
+}
+
+function parseMoney(text: string): bigint {
+  const match = /-?[\d,]+\.\d\d/.exec(text)
+  const cleaned = (match?.[0] ?? '0').replace(/,/g, '')
+  const [whole = '0', fraction = ''] = cleaned.replace('-', '').split('.')
+  const value = BigInt(whole) * 1000n + BigInt(fraction.padEnd(3, '0').slice(0, 3))
+  return cleaned.startsWith('-') ? -value : value
+}
